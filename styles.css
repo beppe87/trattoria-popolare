@@ -232,8 +232,8 @@ body {
   }
 
   .board-row {
-    grid-template-columns: minmax(96px, 110px) 42px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: 92px 40px minmax(0, 1fr);
+    gap: 8px;
     padding: 11px 0 12px;
   }
 
@@ -250,14 +250,14 @@ body {
   }
 
   .event-date {
-    font-size: clamp(0.76rem, 3.25vw, 0.94rem);
+    font-size: clamp(0.74rem, 3.05vw, 0.9rem);
     line-height: 1.2;
     letter-spacing: 0;
     white-space: nowrap;
   }
 
   .event-time {
-    font-size: clamp(0.82rem, 3.45vw, 0.98rem);
+    font-size: clamp(0.8rem, 3.25vw, 0.94rem);
     line-height: 1.2;
   }
 
@@ -281,7 +281,7 @@ body {
 
 @media (max-width: 380px) {
   .board-row {
-    grid-template-columns: minmax(90px, 102px) 40px minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 88px 38px minmax(0, 1fr);
+    gap: 7px;
   }
 }
