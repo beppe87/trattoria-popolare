@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trattoria Popolare - Prossimi eventi</title>
+  <meta name="description" content="Prossimi eventi della Trattoria Popolare - Arci Traverso, Via Antonio Pacinotti 4, Milano." />
+  <meta property="og:title" content="Trattoria Popolare - Prossimi eventi" />
+  <meta property="og:description" content="Eventi, prenotazioni e contatti della Trattoria Popolare." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero" aria-label="Trattoria Popolare">
+      <img class="logo" src="assets/logo.svg" alt="Trattoria Popolare" />
+    </header>
+
+    <section class="events" aria-labelledby="events-title">
+      <h1 id="events-title">Prossimi eventi</h1>
+
+      <div class="board" role="table" aria-label="Tabellone prossimi eventi">
+        <div class="board-row board-head" role="row">
+          <div role="columnheader">Data</div>
+          <div role="columnheader">Ora</div>
+          <div role="columnheader">Evento</div>
+        </div>
+        <div id="events-list" class="events-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <a class="footer-item" href="https://www.google.com/maps/search/?api=1&query=Via%20Antonio%20Pacinotti%204%2C%2020156%20Milano" target="_blank" rel="noopener">
+      <span class="footer-icon" aria-hidden="true">⌖</span>
+      <span><strong>Via Antonio Pacinotti 4</strong><br>20156 Milano</span>
+    </a>
+
+    <a class="footer-item" href="tel:+393480559421">
+      <span class="footer-icon" aria-hidden="true">☎</span>
+      <span><strong>Prenotazioni</strong><br>348 055 9421</span>
+    </a>
+
+    <a class="footer-item" href="https://www.instagram.com/trattoria_popol_arci_traverso/" target="_blank" rel="noopener">
+      <span class="footer-icon" aria-hidden="true">◎</span>
+      <span><strong>Instagram</strong><br>@trattoria_popol_arci_traverso</span>
+    </a>
+
+    <a class="footer-item" href="https://www.facebook.com/trattoriapopolare2/" target="_blank" rel="noopener">
+      <span class="footer-icon fb" aria-hidden="true">f</span>
+      <span><strong>Facebook</strong><br>Trattoria Popolare - Arci Traverso</span>
+    </a>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
