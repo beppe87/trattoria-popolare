@@ -3,7 +3,7 @@
   - Il sito legge SOLO data/eventi.csv
   - Nessun evento è duplicato o scritto fisso nel JavaScript
   - Colonne richieste: DATA | ORA | EVENTO
-  - Il parametro anti-cache fa vedere subito le modifiche dopo il commit su GitHub
+  - Supporta CSV salvati in UTF-8 oppure Windows-1252/ANSI (accenti tipo è, à, ò)
 */
 
 const EVENTS_CSV_URL = "data/eventi.csv";
@@ -30,7 +30,7 @@ async function fetchEventsFromCsv(url) {
   const response = await fetch(addCacheBuster(url), { cache: "no-store" });
   if (!response.ok) throw new Error(`Errore CSV: ${response.status}`);
 
-  const csv = await response.text();
+  const csv = await readCsvText(response);
   const rows = parseCsv(csv);
   if (rows.length < 2) return [];
 
@@ -50,6 +50,20 @@ async function fetchEventsFromCsv(url) {
       evento: clean(row[eventoIndex])
     }))
     .filter(item => item.data && item.ora && item.evento);
+}
+
+async function readCsvText(response) {
+  const buffer = await response.arrayBuffer();
+
+  let text = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
+
+  // Se il CSV è stato salvato da Excel/Windows in ANSI, gli accenti diventano �.
+  // In quel caso lo rileggo come windows-1252.
+  if (text.includes("\uFFFD")) {
+    text = new TextDecoder("windows-1252", { fatal: false }).decode(buffer);
+  }
+
+  return text.replace(/^\uFEFF/, "");
 }
 
 function renderEvents(events) {

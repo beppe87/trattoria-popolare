@@ -232,8 +232,8 @@ body {
   }
 
   .board-row {
-    grid-template-columns: minmax(96px, 118px) 44px minmax(0, 1fr);
-    gap: 16px;
+    grid-template-columns: minmax(96px, 110px) 42px minmax(0, 1fr);
+    gap: 12px;
     padding: 11px 0 12px;
   }
 
@@ -281,7 +281,7 @@ body {
 
 @media (max-width: 380px) {
   .board-row {
-    grid-template-columns: minmax(90px, 106px) 42px minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(90px, 102px) 40px minmax(0, 1fr);
+    gap: 10px;
   }
 }
