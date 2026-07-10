@@ -3,18 +3,16 @@
   1) Crea un Google Sheet con colonne: DATA | ORA | EVENTO
   2) File > Condividi > Pubblica sul web > CSV
   3) Incolla qui sotto il link CSV pubblicato in SHEET_CSV_URL
-  4) Lascia una riga vuota per non mostrarla sul sito
+  4) Chi aggiorna gli eventi dovrà solo aggiungere/togliere righe nel foglio
 */
 
 const SHEET_CSV_URL = ""; // esempio: "https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv"
 const MAX_EVENTS = 8;
 
 const fallbackEvents = [
-  { data: "12 LUG", ora: "20:30", evento: "Cena popolare + musica live" },
-  { data: "18 LUG", ora: "19:00", evento: "Aperitivo resistente" },
-  { data: "25 LUG", ora: "21:00", evento: "DJ set nel cortile" },
-  { data: "30 LUG", ora: "20:00", evento: "Presentazione libro" },
-  { data: "05 AGO", ora: "19:30", evento: "Serata di cucina regionale" }
+  { data: "MER 24 GIU", ora: "19:30", evento: "Valeria Verdolini: Abolire l'impossibile." },
+  { data: "VEN 26 GIU", ora: "19:30", evento: "W L'ANARCOSINDACALISMO! Con Lia Ratta, Anna Gussetti, Angelo Mulè." },
+  { data: "SAB 27 GIU", ora: "19:30", evento: "VIVA CUBA! Coro Resistente e Coro Questo è il fiore del partigiano raccontano Cuba." }
 ];
 
 const list = document.getElementById("events-list");
@@ -43,7 +41,6 @@ async function fetchEventsFromSheet(url) {
   if (rows.length < 2) return [];
 
   const headers = rows[0].map(normalizeHeader);
-
   const dataIndex = headers.indexOf("data");
   const oraIndex = headers.indexOf("ora");
   const eventoIndex = headers.indexOf("evento");
@@ -75,13 +72,11 @@ function renderEvents(events) {
     const row = document.createElement("div");
     row.className = "board-row";
     row.setAttribute("role", "row");
-
     row.innerHTML = `
       <div class="event-date" role="cell">${escapeHtml(item.data)}</div>
       <div class="event-time" role="cell">${escapeHtml(item.ora)}</div>
       <div class="event-title" role="cell">${escapeHtml(item.evento)}</div>
     `;
-
     fragment.appendChild(row);
   });
 
@@ -150,6 +145,5 @@ function parseCsv(csv) {
 
   row.push(current);
   rows.push(row);
-
   return rows.filter(r => r.some(cell => clean(cell)));
 }

@@ -1,35 +1,36 @@
 # Trattoria Popolare - sito statico
 
-Sito one-page rosso/bianco con logo, tabellone eventi e footer.
+Sito one-page statico per GitHub Pages.
 
-## File principali
+## Aggiornare gli eventi
 
-- `index.html` struttura pagina
-- `styles.css` grafica
-- `script.js` caricamento eventi
-- `assets/logo.svg` logo temporaneo/vettoriale
-- `data/eventi.csv` esempio contenuti
+Metodo base: modifica `data/eventi.csv` con colonne:
 
-## Eventi da Google Sheet
-
-1. Crea un Google Sheet con queste colonne esatte:
-
-```text
-DATA | ORA | EVENTO
+```csv
+DATA,ORA,EVENTO
+12 LUG,20:30,Cena popolare + musica live
 ```
 
-2. Inserisci gli eventi, una riga per evento.
-3. Vai su `File > Condividi > Pubblica sul web`.
-4. Scegli formato `CSV`.
-5. Copia il link pubblicato.
-6. Apri `script.js` e incolla il link qui:
+Metodo consigliato: collega un Google Sheet pubblicato come CSV e incolla il link in `script.js`:
 
 ```js
-const SHEET_CSV_URL = "INCOLLA_QUI_IL_LINK_CSV";
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv";
 ```
 
-Se `SHEET_CSV_URL` resta vuoto, il sito usa gli eventi di esempio.
+Chi aggiorna gli eventi dovrà solo compilare il Google Sheet con colonne `DATA | ORA | EVENTO`.
+
+## Sostituire il logo
+
+Sostituisci il file:
+
+```text
+assets/logo.png
+```
+
+Mantieni lo stesso nome file per non dover modificare il codice.
 
 ## Pubblicazione GitHub Pages
 
-Carica tutti i file nella root del repository, poi abilita GitHub Pages da `Settings > Pages` usando branch `main` e folder `/root`.
+Carica questi file nella root del repository, poi:
+
+Settings → Pages → Deploy from a branch → main → /root → Save.
