@@ -1,19 +1,13 @@
 /*
-  COME AGGIORNARE GLI EVENTI DA GOOGLE SHEET
-  1) Crea un Google Sheet con colonne: DATA | ORA | EVENTO
-  2) File > Condividi > Pubblica sul web > CSV
-  3) Incolla qui sotto il link CSV pubblicato in SHEET_CSV_URL
-  4) Chi aggiorna gli eventi dovrà solo aggiungere/togliere righe nel foglio
+  EVENTI
+  - Il sito legge SOLO data/eventi.csv
+  - Nessun evento è duplicato o scritto fisso nel JavaScript
+  - Colonne richieste: DATA | ORA | EVENTO
+  - Il parametro anti-cache fa vedere subito le modifiche dopo il commit su GitHub
 */
 
-const SHEET_CSV_URL = ""; // esempio: "https://docs.google.com/spreadsheets/d/e/XXXXX/pub?output=csv"
+const EVENTS_CSV_URL = "data/eventi.csv";
 const MAX_EVENTS = 8;
-
-const fallbackEvents = [
-  { data: "MER 24 GIU", ora: "19:30", evento: "Valeria Verdolini: Abolire l'impossibile." },
-  { data: "VEN 26 GIU", ora: "19:30", evento: "W L'ANARCOSINDACALISMO! Con Lia Ratta, Anna Gussetti, Angelo Mulè." },
-  { data: "SAB 27 GIU", ora: "19:30", evento: "VIVA CUBA! Coro Resistente e Coro Questo è il fiore del partigiano raccontano Cuba." }
-];
 
 const list = document.getElementById("events-list");
 
@@ -21,19 +15,19 @@ document.addEventListener("DOMContentLoaded", loadEvents);
 
 async function loadEvents() {
   try {
-    const events = SHEET_CSV_URL.trim()
-      ? await fetchEventsFromSheet(SHEET_CSV_URL)
-      : fallbackEvents;
-
+    const events = await fetchEventsFromCsv(EVENTS_CSV_URL);
     renderEvents(events.slice(0, MAX_EVENTS));
   } catch (error) {
     console.error(error);
-    renderError("Non riesco a caricare gli eventi dal Google Sheet.", "Controlla che il foglio sia pubblicato come CSV e che il link sia corretto.");
+    renderError(
+      "Non riesco a caricare gli eventi.",
+      "Controlla che data/eventi.csv esista e abbia le colonne DATA, ORA, EVENTO."
+    );
   }
 }
 
-async function fetchEventsFromSheet(url) {
-  const response = await fetch(url, { cache: "no-store" });
+async function fetchEventsFromCsv(url) {
+  const response = await fetch(addCacheBuster(url), { cache: "no-store" });
   if (!response.ok) throw new Error(`Errore CSV: ${response.status}`);
 
   const csv = await response.text();
@@ -46,7 +40,7 @@ async function fetchEventsFromSheet(url) {
   const eventoIndex = headers.indexOf("evento");
 
   if (dataIndex === -1 || oraIndex === -1 || eventoIndex === -1) {
-    throw new Error("Il Google Sheet deve avere le colonne DATA, ORA, EVENTO");
+    throw new Error("Il CSV deve avere le colonne DATA, ORA, EVENTO");
   }
 
   return rows.slice(1)
@@ -87,6 +81,11 @@ function renderError(message, detail) {
   list.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
 }
 
+function addCacheBuster(url) {
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}v=${Date.now()}`;
+}
+
 function normalizeHeader(value) {
   return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
@@ -105,6 +104,7 @@ function escapeHtml(value) {
 }
 
 function parseCsv(csv) {
+  const delimiter = detectDelimiter(csv);
   const rows = [];
   let current = "";
   let row = [];
@@ -125,7 +125,7 @@ function parseCsv(csv) {
       continue;
     }
 
-    if (char === "," && !inQuotes) {
+    if (char === delimiter && !inQuotes) {
       row.push(current);
       current = "";
       continue;
@@ -146,4 +146,11 @@ function parseCsv(csv) {
   row.push(current);
   rows.push(row);
   return rows.filter(r => r.some(cell => clean(cell)));
+}
+
+function detectDelimiter(csv) {
+  const firstLine = csv.split(/\r?\n/)[0] || "";
+  const semicolons = (firstLine.match(/;/g) || []).length;
+  const commas = (firstLine.match(/,/g) || []).length;
+  return semicolons > commas ? ";" : ",";
 }

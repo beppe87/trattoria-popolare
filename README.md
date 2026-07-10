@@ -1,36 +1,23 @@
 # Trattoria Popolare - sito statico
 
-Sito one-page statico per GitHub Pages.
-
-## Aggiornare gli eventi
-
-Metodo base: modifica `data/eventi.csv` con colonne:
+## Aggiornare eventi
+Modifica solo `data/eventi.csv` con colonne:
 
 ```csv
 DATA,ORA,EVENTO
-12 LUG,20:30,Cena popolare + musica live
+LUN 24 GIU,20:30,Cena popolare + musica live
 ```
 
-Metodo consigliato: collega un Google Sheet pubblicato come CSV e incolla il link in `script.js`:
+Gli eventi non sono scritti nel JavaScript.
 
-```js
-const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv";
-```
+## Logo
+- `assets/logo.png` = prova bicolore nero/bianco
+- `assets/logo-white.png` = versione tutta bianca precedente
+- `assets/logo-bicolore.png` = copia della prova bicolore
 
-Chi aggiorna gli eventi dovrà solo compilare il Google Sheet con colonne `DATA | ORA | EVENTO`.
+Per tornare al logo bianco: rinomina `logo-white.png` in `logo.png`.
 
-## Sostituire il logo
-
-Sostituisci il file:
-
-```text
-assets/logo.png
-```
-
-Mantieni lo stesso nome file per non dover modificare il codice.
-
-## Pubblicazione GitHub Pages
-
-Carica questi file nella root del repository, poi:
-
-Settings → Pages → Deploy from a branch → main → /root → Save.
+## Versione v8
+- Eventi letti solo da `data/eventi.csv`.
+- Mobile: colonna DATA più larga, ORA più stretta/allineata a destra.
+- Logo bicolore corretto: parti nere nere, parti rosse trasformate in bianco, con trasparenza PNG.
