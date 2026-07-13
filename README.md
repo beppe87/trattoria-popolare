@@ -1,16 +1,15 @@
 # Trattoria Popolare - sito statico
 
-## File da pubblicare su GitHub Pages
+## Eventi futuri e passati
 
-Carica nella root del repository:
+Il sito ha già due sezioni:
 
 ```text
-index.html
-styles.css
-script.js
-assets/
-data/
+Prossimi eventi
+Eventi passati
 ```
+
+Si gestisce tutto da un solo CSV/foglio.
 
 ## Aggiornare gli eventi
 
@@ -20,21 +19,56 @@ Modifica solo:
 data/eventi.csv
 ```
 
-Colonne obbligatorie:
+Colonne:
 
 ```text
-DATA,ORA,EVENTO
+DATA,ORA,EVENTO,LINK,MOSTRA
 ```
 
-Esempio:
+- `DATA`: obbligatoria, formato `YYYY-MM-DD`, esempio `2026-06-24`.
+- `ORA`: obbligatoria, esempio `19:30`.
+- `EVENTO`: obbligatoria.
+- `LINK`: opzionale. Se compilato, tutta la riga diventa cliccabile.
+- `MOSTRA`: opzionale. Usa `si`; se scrivi `no`, la riga resta nel foglio ma non appare.
 
-```csv
-DATA,ORA,EVENTO
-MER 24 GIU,19:30,Valeria Verdolini: Abolire l'impossibile.
-VEN 26 GIU,19:30,"W L'ANARCOSINDACALISMO! Con Lia Ratta, Anna Gussetti, Angelo Mulè."
+Il sito divide automaticamente:
+
+```text
+DATA >= oggi → Prossimi eventi
+DATA < oggi  → Eventi passati
 ```
 
-Salva il CSV in UTF-8 se possibile. Il sito prova comunque a leggere anche Windows-1252/ANSI.
+A schermo la data viene formattata automaticamente, esempio:
+
+```text
+MER 24 GIU
+```
+
+## Google Sheet
+
+Quando userete Google Sheet, il foglio dovrà avere le stesse colonne:
+
+```text
+DATA | ORA | EVENTO | LINK | MOSTRA
+```
+
+Poi nel file `script.js` basterà sostituire:
+
+```js
+const EVENTS_CSV_URL = "data/eventi.csv";
+```
+
+con il link CSV pubblicato del Google Sheet.
+
+## Footer legale
+
+Footer impostato su:
+
+```text
+ASSOCIAZIONE ARCI TRAVERSO
+P.IVA: 09009060964
+C.F.: 97593060151
+```
 
 ## Logo
 
@@ -49,20 +83,26 @@ assets/logo.png
 - rosso trasformato in bianco;
 - sfondo trasparente.
 
-Backup:
-```text
-assets/logo-source.svg
-assets/logo-original-color.svg
-```
 
-## Footer legale
+## Google Sheet collegato
 
-Nel file `index.html` sostituisci:
+Questo pacchetto legge già il foglio:
 
 ```text
-Associazione [DENOMINAZIONE LEGALE]
-C.F. [INSERIRE]
-P.IVA [INSERIRE SE PRESENTE]
+https://docs.google.com/spreadsheets/d/1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I/edit
 ```
 
-Se il sito va intestato a una cooperativa/società, il footer va completato con i dati societari corretti.
+Nel file `script.js` sono impostati:
+
+```js
+const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
+const GOOGLE_SHEET_GID = "0";
+```
+
+Per farlo funzionare online, il foglio deve essere pubblico in lettura:
+
+```text
+Condividi → Accesso generale → Chiunque abbia il link → Visualizzatore
+```
+
+Non usare `Editor` pubblico. Gli editor vanno aggiunti uno per uno.

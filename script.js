@@ -1,85 +1,180 @@
 /*
-  EVENTI
-  - Il sito legge SOLO data/eventi.csv
-  - Nessun evento è duplicato o scritto fisso nel JavaScript
+  EVENTI DA GOOGLE SHEET
+  - Il sito legge il foglio Google tramite Google Visualization JSONP
+  - Nessun backend, nessun GitHub da toccare per aggiornare gli eventi
   - Colonne richieste: DATA | ORA | EVENTO
-  - Supporta CSV salvati in UTF-8 oppure Windows-1252/ANSI (accenti tipo è, à, ò)
+  - DATA consigliata: YYYY-MM-DD, esempio 2026-06-24
+  - Colonne opzionali: LINK | MOSTRA
+  - Se LINK è compilato, tutta la riga diventa cliccabile
+  - Se MOSTRA è no/false/0/n, la riga non viene mostrata
 */
 
-const EVENTS_CSV_URL = "data/eventi.csv";
-const MAX_EVENTS = 8;
+const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
+const GOOGLE_SHEET_GID = "0";
 
-const list = document.getElementById("events-list");
+const MAX_UPCOMING_EVENTS = 8;
+const MAX_PAST_EVENTS = 12;
+
+const upcomingList = document.getElementById("upcoming-events-list");
+const pastList = document.getElementById("past-events-list");
 
 document.addEventListener("DOMContentLoaded", loadEvents);
 
 async function loadEvents() {
   try {
-    const events = await fetchEventsFromCsv(EVENTS_CSV_URL);
-    renderEvents(events.slice(0, MAX_EVENTS));
+    const rows = await fetchEventsFromGoogleSheet();
+    const events = normalizeSheetRows(rows);
+    const today = getTodayDateOnly();
+
+    const upcoming = events
+      .filter(item => item.dateObject >= today)
+      .sort((a, b) => a.dateObject - b.dateObject || a.ora.localeCompare(b.ora))
+      .slice(0, MAX_UPCOMING_EVENTS);
+
+    const past = events
+      .filter(item => item.dateObject < today)
+      .sort((a, b) => b.dateObject - a.dateObject || b.ora.localeCompare(a.ora))
+      .slice(0, MAX_PAST_EVENTS);
+
+    renderEvents(upcomingList, upcoming, "Nessun evento in programma.");
+    renderEvents(pastList, past, "Nessun evento passato da mostrare.");
   } catch (error) {
     console.error(error);
     renderError(
+      upcomingList,
       "Non riesco a caricare gli eventi.",
-      "Controlla che data/eventi.csv esista e abbia le colonne DATA, ORA, EVENTO."
+      "Controlla che il Google Sheet sia pubblico in lettura e abbia le colonne DATA, ORA, EVENTO."
     );
+    renderEvents(pastList, [], "Nessun evento passato da mostrare.");
   }
 }
 
-async function fetchEventsFromCsv(url) {
-  const response = await fetch(addCacheBuster(url), { cache: "no-store" });
-  if (!response.ok) throw new Error(`Errore CSV: ${response.status}`);
+function fetchEventsFromGoogleSheet() {
+  return new Promise((resolve, reject) => {
+    const callbackName = `sheetCallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 
-  const csv = await readCsvText(response);
-  const rows = parseCsv(csv);
-  if (rows.length < 2) return [];
+    const url = new URL(`https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq`);
+    url.searchParams.set("gid", GOOGLE_SHEET_GID);
+    url.searchParams.set("headers", "1");
+    url.searchParams.set("tqx", `responseHandler:${callbackName}`);
+    url.searchParams.set("_", Date.now());
 
-  const headers = rows[0].map(normalizeHeader);
-  const dataIndex = headers.indexOf("data");
+    const script = document.createElement("script");
+    script.src = url.toString();
+    script.async = true;
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Timeout caricamento Google Sheet"));
+    }, 10000);
+
+    window[callbackName] = response => {
+      cleanup();
+
+      if (!response || response.status === "error") {
+        reject(new Error(response?.errors?.[0]?.detailed_message || "Errore Google Sheet"));
+        return;
+      }
+
+      resolve(readGoogleTable(response.table));
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Google Sheet non raggiungibile"));
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    document.body.appendChild(script);
+  });
+}
+
+function readGoogleTable(table) {
+  if (!table || !table.cols || !table.rows) return [];
+
+  const headers = table.cols.map(col => normalizeHeader(col.label || col.id || ""));
+  const rows = table.rows.map(row =>
+    (row.c || []).map(cell => cellToString(cell))
+  );
+
+  return { headers, rows };
+}
+
+function normalizeSheetRows(sheetData) {
+  const headers = sheetData.headers;
+  const rows = sheetData.rows;
+
+  const dataIndex = findFirstIndex(headers, ["data", "data_iso", "dataiso"]);
   const oraIndex = headers.indexOf("ora");
   const eventoIndex = headers.indexOf("evento");
+  const linkIndex = findFirstIndex(headers, ["link", "linkevento", "link_fb", "facebook", "evento_fb"]);
+  const mostraIndex = findFirstIndex(headers, ["mostra", "visibile", "online"]);
 
   if (dataIndex === -1 || oraIndex === -1 || eventoIndex === -1) {
-    throw new Error("Il CSV deve avere le colonne DATA, ORA, EVENTO");
+    throw new Error("Il Google Sheet deve avere le colonne DATA, ORA, EVENTO");
   }
 
-  return rows.slice(1)
-    .map(row => ({
-      data: clean(row[dataIndex]),
-      ora: clean(row[oraIndex]),
-      evento: clean(row[eventoIndex])
-    }))
-    .filter(item => item.data && item.ora && item.evento);
+  return rows
+    .map(row => {
+      const rawDate = clean(row[dataIndex]);
+      const dateObject = parseSheetDate(rawDate);
+
+      return {
+        data: dateObject ? formatDateIt(dateObject) : rawDate,
+        dateObject,
+        ora: clean(row[oraIndex]),
+        evento: clean(row[eventoIndex]),
+        link: linkIndex === -1 ? "" : normalizeUrl(row[linkIndex]),
+        mostra: mostraIndex === -1 ? "si" : clean(row[mostraIndex]).toLowerCase()
+      };
+    })
+    .filter(item => item.dateObject && item.ora && item.evento)
+    .filter(item => !["no", "false", "0", "n"].includes(item.mostra));
 }
 
-async function readCsvText(response) {
-  const buffer = await response.arrayBuffer();
+function cellToString(cell) {
+  if (!cell) return "";
 
-  let text = new TextDecoder("utf-8", { fatal: false }).decode(buffer);
-
-  // Se il CSV è stato salvato da Excel/Windows in ANSI, gli accenti diventano �.
-  // In quel caso lo rileggo come windows-1252.
-  if (text.includes("\uFFFD")) {
-    text = new TextDecoder("windows-1252", { fatal: false }).decode(buffer);
+  if (typeof cell.v === "string" && cell.v.startsWith("Date(")) {
+    return cell.v;
   }
 
-  return text.replace(/^\uFEFF/, "");
+  if (cell.v !== null && cell.v !== undefined) {
+    return String(cell.v);
+  }
+
+  return cell.f || "";
 }
 
-function renderEvents(events) {
-  list.innerHTML = "";
+function renderEvents(target, events, emptyMessage) {
+  target.innerHTML = "";
 
   if (!events.length) {
-    list.innerHTML = `<div class="empty-state">Nessun evento in programma.</div>`;
+    target.innerHTML = `<div class="empty-state">${escapeHtml(emptyMessage)}</div>`;
     return;
   }
 
   const fragment = document.createDocumentFragment();
 
   events.forEach(item => {
-    const row = document.createElement("div");
-    row.className = "board-row";
+    const row = item.link ? document.createElement("a") : document.createElement("div");
+
+    row.className = item.link ? "board-row board-row-link" : "board-row";
     row.setAttribute("role", "row");
+
+    if (item.link) {
+      row.href = item.link;
+      row.target = "_blank";
+      row.rel = "noopener";
+      row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
+      row.title = "Apri evento";
+    }
+
     row.innerHTML = `
       <div class="event-date" role="cell">${escapeHtml(item.data)}</div>
       <div class="event-time" role="cell">${escapeHtml(item.ora)}</div>
@@ -88,20 +183,81 @@ function renderEvents(events) {
     fragment.appendChild(row);
   });
 
-  list.appendChild(fragment);
+  target.appendChild(fragment);
 }
 
-function renderError(message, detail) {
-  list.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
+function renderError(target, message, detail) {
+  target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
 }
 
-function addCacheBuster(url) {
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}v=${Date.now()}`;
+function getTodayDateOnly() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function parseSheetDate(value) {
+  const text = clean(value);
+
+  // Formato consigliato nel foglio: 2026-06-24
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) return makeDate(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+
+  // Formato Google Visualization per celle data: Date(2026,5,24)
+  const googleDate = text.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
+  if (googleDate) return makeDate(Number(googleDate[1]), Number(googleDate[2]), Number(googleDate[3]));
+
+  // Fallback se qualcuno scrive 24/06/2026
+  const italian = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (italian) return makeDate(Number(italian[3]), Number(italian[2]) - 1, Number(italian[1]));
+
+  return null;
+}
+
+function makeDate(year, month, day) {
+  const date = new Date(year, month, day);
+
+  if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+    return null;
+  }
+
+  return date;
+}
+
+function formatDateIt(date) {
+  const weekday = new Intl.DateTimeFormat("it-IT", { weekday: "short" }).format(date);
+  const day = new Intl.DateTimeFormat("it-IT", { day: "2-digit" }).format(date);
+  const month = new Intl.DateTimeFormat("it-IT", { month: "short" }).format(date);
+
+  return `${weekday} ${day} ${month}`
+    .replaceAll(".", "")
+    .toUpperCase();
+}
+
+function findFirstIndex(values, candidates) {
+  for (const candidate of candidates) {
+    const index = values.indexOf(candidate);
+    if (index !== -1) return index;
+  }
+  return -1;
 }
 
 function normalizeHeader(value) {
-  return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "")
+    .replace(/-/g, "_");
+}
+
+function normalizeUrl(value) {
+  const url = clean(value);
+  if (!url) return "";
+
+  if (/^https?:\/\//i.test(url)) return url;
+  if (/^(www\.|facebook\.com|fb\.me)/i.test(url)) return `https://${url}`;
+
+  return "";
 }
 
 function clean(value) {
@@ -115,56 +271,4 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function parseCsv(csv) {
-  const delimiter = detectDelimiter(csv);
-  const rows = [];
-  let current = "";
-  let row = [];
-  let inQuotes = false;
-
-  for (let i = 0; i < csv.length; i++) {
-    const char = csv[i];
-    const next = csv[i + 1];
-
-    if (char === '"' && inQuotes && next === '"') {
-      current += '"';
-      i++;
-      continue;
-    }
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-      continue;
-    }
-
-    if (char === delimiter && !inQuotes) {
-      row.push(current);
-      current = "";
-      continue;
-    }
-
-    if ((char === "\n" || char === "\r") && !inQuotes) {
-      if (char === "\r" && next === "\n") i++;
-      row.push(current);
-      rows.push(row);
-      row = [];
-      current = "";
-      continue;
-    }
-
-    current += char;
-  }
-
-  row.push(current);
-  rows.push(row);
-  return rows.filter(r => r.some(cell => clean(cell)));
-}
-
-function detectDelimiter(csv) {
-  const firstLine = csv.split(/\r?\n/)[0] || "";
-  const semicolons = (firstLine.match(/;/g) || []).length;
-  const commas = (firstLine.match(/,/g) || []).length;
-  return semicolons > commas ? ";" : ",";
 }

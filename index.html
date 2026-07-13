@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Trattoria Popolare - Prossimi eventi</title>
-  <meta name="description" content="Prossimi eventi e prenotazioni della Trattoria Popolare - Arci Traverso, Via Antonio Pacinotti 4, Milano." />
+  <meta name="description" content="Prossimi eventi, archivio eventi e contatti della Trattoria Popolare - Arci Traverso, Via Antonio Pacinotti 4, Milano." />
   <meta property="og:title" content="Trattoria Popolare - Prossimi eventi" />
-  <meta property="og:description" content="Prossimi eventi, indirizzo, prenotazioni e social della Trattoria Popolare." />
+  <meta property="og:description" content="Prossimi eventi, archivio eventi, indirizzo, prenotazioni e social della Trattoria Popolare." />
   <meta property="og:type" content="website" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,44 +29,60 @@
           <div role="columnheader">Ora</div>
           <div role="columnheader">Evento</div>
         </div>
-        <div id="events-list" class="events-list" aria-live="polite"></div>
+        <div id="upcoming-events-list" class="events-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="events archive-events" aria-labelledby="archive-title">
+      <h2 id="archive-title">Eventi passati</h2>
+
+      <div class="board" role="table" aria-label="Archivio eventi passati">
+        <div class="board-row board-head" role="row">
+          <div role="columnheader">Data</div>
+          <div role="columnheader">Ora</div>
+          <div role="columnheader">Evento</div>
+        </div>
+        <div id="past-events-list" class="events-list" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="contacts-section" aria-labelledby="contacts-title">
+      <h2 id="contacts-title">Contatti</h2>
+
+      <div class="contacts-grid">
+        <a class="contact-item" href="https://www.google.com/maps/search/?api=1&query=Via%20Antonio%20Pacinotti%204%2C%2020155%20Milano" target="_blank" rel="noopener">
+          <span class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </span>
+          <span><strong>Via Antonio Pacinotti 4</strong><br>20155 Milano</span>
+        </a>
+
+        <a class="contact-item" href="tel:+393480559421">
+          <span class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.6 3.1 3.5 5 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.3 1.3.4 2.7.6 4.1.6.7 0 1.3.6 1.3 1.3V20c0 .7-.6 1.3-1.3 1.3C10.8 21.3 2.7 13.2 2.7 3.3 2.7 2.6 3.3 2 4 2h3.2c.7 0 1.3.6 1.3 1.3 0 1.4.2 2.8.6 4.1.1.4 0 .9-.3 1.2l-2.2 2.2Z"/></svg>
+          </span>
+          <span><strong>Prenotazioni</strong><br>348 055 9421</span>
+        </a>
+
+        <a class="contact-item" href="https://www.instagram.com/trattoria_popol_arci_traverso/" target="_blank" rel="noopener">
+          <span class="contact-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r="1"/></svg>
+          </span>
+          <span><strong>Instagram</strong><br>@trattoria_popol_<wbr>arci_traverso</span>
+        </a>
+
+        <a class="contact-item" href="https://www.facebook.com/trattoriapopolare2/" target="_blank" rel="noopener">
+          <span class="contact-icon facebook-icon" aria-hidden="true">f</span>
+          <span><strong>Facebook</strong><br>Trattoria Popolare - Arci Traverso</span>
+        </a>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer" aria-label="Contatti">
-    <a class="footer-item" href="https://www.google.com/maps/search/?api=1&query=Via%20Antonio%20Pacinotti%204%2C%2020155%20Milano" target="_blank" rel="noopener">
-      <span class="footer-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
-      </span>
-      <span><strong>Via Antonio Pacinotti 4</strong><br>20155 Milano</span>
-    </a>
-
-    <a class="footer-item" href="tel:+393480559421">
-      <span class="footer-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.6 3.1 3.5 5 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.3 1.3.4 2.7.6 4.1.6.7 0 1.3.6 1.3 1.3V20c0 .7-.6 1.3-1.3 1.3C10.8 21.3 2.7 13.2 2.7 3.3 2.7 2.6 3.3 2 4 2h3.2c.7 0 1.3.6 1.3 1.3 0 1.4.2 2.8.6 4.1.1.4 0 .9-.3 1.2l-2.2 2.2Z"/></svg>
-      </span>
-      <span><strong>Prenotazioni</strong><br>348 055 9421</span>
-    </a>
-
-    <a class="footer-item" href="https://www.instagram.com/trattoria_popol_arci_traverso/" target="_blank" rel="noopener">
-      <span class="footer-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/><circle cx="17" cy="7" r="1"/></svg>
-      </span>
-      <span><strong>Instagram</strong><br>@trattoria_popol_<wbr>arci_traverso</span>
-    </a>
-
-    <a class="footer-item" href="https://www.facebook.com/trattoriapopolare2/" target="_blank" rel="noopener">
-      <span class="footer-icon facebook-icon" aria-hidden="true">f</span>
-      <span><strong>Facebook</strong><br>Trattoria Popolare - Arci Traverso</span>
-    </a>
-
-    <div class="legal-footer">
-      <strong>Associazione [DENOMINAZIONE LEGALE]</strong>
-      <span>Via Antonio Pacinotti 4, 20155 Milano</span>
-      <span>C.F. [INSERIRE]</span>
-      <span>P.IVA [INSERIRE SE PRESENTE]</span>
-    </div>
+  <footer class="site-footer legal-footer" aria-label="Dati legali">
+    <strong>ASSOCIAZIONE ARCI TRAVERSO</strong>
+    <span>P.IVA: 09009060964</span>
+    <span>C.F.: 97593060151</span>
   </footer>
 
   <script src="script.js"></script>
