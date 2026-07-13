@@ -106,3 +106,15 @@ Condividi → Accesso generale → Chiunque abbia il link → Visualizzatore
 ```
 
 Non usare `Editor` pubblico. Gli editor vanno aggiunti uno per uno.
+
+
+## Link eventi su mobile
+
+I link evento aprono in una nuova scheda.
+Se il browser mobile blocca l'apertura della nuova scheda, il sito usa un fallback e apre il link nella scheda corrente.
+
+Nel Google Sheet la colonna `LINK` deve contenere il link completo in chiaro:
+
+```text
+https://www.facebook.com/events/123456789
+```

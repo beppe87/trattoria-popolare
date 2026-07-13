@@ -170,9 +170,10 @@ function renderEvents(target, events, emptyMessage) {
     if (item.link) {
       row.href = item.link;
       row.target = "_blank";
-      row.rel = "noopener";
+      row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
+      row.addEventListener("click", openEventLink);
     }
 
     row.innerHTML = `
@@ -189,6 +190,22 @@ function renderEvents(target, events, emptyMessage) {
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
 }
+
+function openEventLink(event) {
+  const url = event.currentTarget.href;
+  if (!url) return;
+
+  event.preventDefault();
+
+  // Prima scelta: nuova scheda/finestra.
+  // Fallback: se il browser mobile blocca l'apertura, usa la scheda corrente.
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
+
+  if (!opened) {
+    window.location.href = url;
+  }
+}
+
 
 function getTodayDateOnly() {
   const now = new Date();
