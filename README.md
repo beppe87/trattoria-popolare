@@ -168,3 +168,17 @@ La colonna `LINK` è opzionale: se compilata, rende cliccabile la riga.
 Comportamento link eventi:
 - Desktop: apre in nuova scheda.
 - Mobile: apre nella stessa scheda, perché è il comportamento più affidabile su Safari/Chrome mobile e browser interni.
+
+
+## Link Google Maps v26
+
+Il link dell'indirizzo nei contatti ora cerca il locale per nome + indirizzo:
+
+```text
+Trattoria Popolare Arci Traverso Via Antonio Pacinotti 4 20155 Milano
+```
+
+URL usato:
+```text
+https://www.google.com/maps/search/?api=1&query=Trattoria%20Popolare%20Arci%20Traverso%20Via%20Antonio%20Pacinotti%204%2020155%20Milano
+```
