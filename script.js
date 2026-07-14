@@ -224,9 +224,13 @@ function openEventLink(event) {
 
   event.preventDefault();
 
-  // Prima scelta: nuova scheda.
-  // Nota: non passo "noopener" come feature perché su alcuni browser fa tornare null
-  // anche quando la tab si apre; così evitamo doppia apertura nuova tab + scheda corrente.
+  // Mobile: più affidabile aprire nella stessa scheda.
+  // Desktop: nuova scheda.
+  if (isMobileBrowser()) {
+    window.location.assign(url);
+    return;
+  }
+
   const opened = window.open(url, "_blank");
 
   if (opened) {
@@ -234,10 +238,14 @@ function openEventLink(event) {
     return;
   }
 
-  // Fallback solo se la nuova scheda è davvero bloccata.
-  window.location.href = url;
+  window.location.assign(url);
 }
 
+function isMobileBrowser() {
+  return window.matchMedia("(hover: none) and (pointer: coarse)").matches
+    || window.innerWidth <= 760
+    || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 function getTodayDateOnly() {
   const now = new Date();

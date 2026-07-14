@@ -161,3 +161,10 @@ DATA | ORA | EVENTO | LINK
 
 Se una riga è presente e ha DATA/ORA/EVENTO compilati, viene mostrata.
 La colonna `LINK` è opzionale: se compilata, rende cliccabile la riga.
+
+
+## Fix link eventi mobile v25
+
+Comportamento link eventi:
+- Desktop: apre in nuova scheda.
+- Mobile: apre nella stessa scheda, perché è il comportamento più affidabile su Safari/Chrome mobile e browser interni.
