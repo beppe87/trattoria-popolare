@@ -224,18 +224,57 @@ function openEventLink(event) {
 
   event.preventDefault();
 
-  // Desktop: apre solo nuova scheda, senza fallback sulla scheda corrente.
+  // Desktop: nuova scheda, senza fallback sulla scheda corrente.
   if (!isMobileBrowser()) {
     window.open(url, "_blank", "noopener,noreferrer");
     return;
   }
 
-  // Mobile: stesso comportamento della prima versione che funzionava.
-  // Prova nuova scheda/app; se viene bloccata, apre nella scheda corrente.
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  // Mobile Facebook: prova ad aprire direttamente l'app Facebook.
+  const facebookAppUrl = getFacebookAppUrl(url);
 
-  if (!opened) {
-    window.location.href = url;
+  if (facebookAppUrl) {
+    let appOpened = false;
+
+    const markAppOpened = () => {
+      appOpened = true;
+    };
+
+    document.addEventListener("visibilitychange", markAppOpened, { once: true });
+    window.addEventListener("pagehide", markAppOpened, { once: true });
+
+    window.location.href = facebookAppUrl;
+
+    // Se l'app non parte, resta sul sito e dopo poco apre il link web.
+    window.setTimeout(() => {
+      document.removeEventListener("visibilitychange", markAppOpened);
+      window.removeEventListener("pagehide", markAppOpened);
+
+      if (!appOpened && document.visibilityState === "visible") {
+        window.location.href = url;
+      }
+    }, 1200);
+
+    return;
+  }
+
+  // Mobile non Facebook: apertura normale nella stessa scheda.
+  window.location.href = url;
+}
+
+function getFacebookAppUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+
+    if (!host.endsWith("facebook.com") && host !== "fb.me") {
+      return "";
+    }
+
+    // Apre il link dentro l'app Facebook usando l'URL originale dell'evento.
+    return `fb://facewebmodal/f?href=${encodeURIComponent(url)}`;
+  } catch {
+    return "";
   }
 }
 

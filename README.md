@@ -191,3 +191,11 @@ Questa versione riprende il comportamento che funzionava su mobile, ma corregge 
 Comportamento:
 - Desktop: apre solo nuova scheda, senza fallback sulla scheda corrente.
 - Mobile: prova nuova scheda/app Facebook; se bloccata, apre nella scheda corrente.
+
+
+## Fix link eventi Facebook app v30
+
+Comportamento link eventi:
+- Desktop: apre in nuova scheda, senza cambiare la pagina corrente.
+- Mobile + link Facebook: prova ad aprire l'app Facebook con deep link.
+- Se l'app non parte, dopo circa 1 secondo apre il link web nella stessa scheda.
