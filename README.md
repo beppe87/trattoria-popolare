@@ -142,3 +142,11 @@ assets/favicon.png
 ```
 
 È ricavata dal simbolo del logo originale a colori, senza scritta, per essere più leggibile nella tab.
+
+
+## Fix link eventi v23
+
+Corretto comportamento dei link evento:
+- desktop: apre solo nuova scheda;
+- mobile: nuova scheda se possibile;
+- fallback nella stessa scheda solo se la nuova scheda viene bloccata.

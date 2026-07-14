@@ -228,13 +228,18 @@ function openEventLink(event) {
 
   event.preventDefault();
 
-  // Prima scelta: nuova scheda/finestra.
-  // Fallback: se il browser mobile blocca l'apertura, usa la scheda corrente.
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  // Prima scelta: nuova scheda.
+  // Nota: non passo "noopener" come feature perché su alcuni browser fa tornare null
+  // anche quando la tab si apre; così evitamo doppia apertura nuova tab + scheda corrente.
+  const opened = window.open(url, "_blank");
 
-  if (!opened) {
-    window.location.href = url;
+  if (opened) {
+    opened.opener = null;
+    return;
   }
+
+  // Fallback solo se la nuova scheda è davvero bloccata.
+  window.location.href = url;
 }
 
 
