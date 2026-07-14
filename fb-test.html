@@ -21,9 +21,8 @@
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.35;
     }
-    main { max-width: 820px; margin: 0 auto; }
+    main { max-width: 860px; margin: 0 auto; }
     h1 { margin: 0 0 10px; font-size: clamp(1.5rem, 6vw, 2.4rem); }
-    h2 { margin: 24px 0 8px; font-size: 1.15rem; }
     p { color: var(--muted); }
     .status,
     .event-card {
@@ -33,20 +32,9 @@
       border-radius: 14px;
       background: rgba(0,0,0,.12);
     }
-    .event-title {
-      font-weight: 900;
-      font-size: 1.08rem;
-    }
-    .event-meta {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: .92rem;
-    }
-    .buttons {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
+    .event-title { font-weight: 900; font-size: 1.08rem; }
+    .event-meta { margin-top: 4px; color: var(--muted); font-size: .92rem; }
+    .buttons { display: grid; gap: 10px; margin-top: 14px; }
     button {
       display: block;
       width: 100%;
@@ -60,10 +48,7 @@
       text-align: center;
       cursor: pointer;
     }
-    button.primary {
-      background: rgba(255,247,239,.16);
-      border-width: 2px;
-    }
+    button.primary { background: rgba(255,247,239,.16); border-width: 2px; }
     code {
       display: block;
       margin-top: 6px;
@@ -74,6 +59,7 @@
       color: var(--fg);
       font-size: 12px;
     }
+    .warn { color: #ffe8b8; }
     .small { font-size: .88rem; color: var(--muted); }
     .version {
       position: fixed;
@@ -94,19 +80,19 @@
 <main>
   <h1>Test diretto eventi Facebook</h1>
   <p>
-    Carico automaticamente gli eventi dal Google Sheet. 
-    Non devi copiare nulla: prova i pulsanti del primo evento con link Facebook.
+    Carico automaticamente i link dal Google Sheet. 
+    Questa versione mostra anche i link Facebook senza ID numerico, tipo link condivisi/accorciati.
   </p>
 
   <div id="status" class="status">Caricamento eventi dal Google Sheet…</div>
   <div id="events"></div>
 
   <div class="status small">
-    Prova i pulsanti dall’alto. Quando uno apre davvero l’evento nell’app Facebook, segnati il nome del pulsante.
+    Prova i pulsanti dall’alto. Se uno apre davvero l’evento nell’app Facebook, segnati il numero e il nome.
   </div>
 </main>
 
-<div class="version">v40-test-direct</div>
+<div class="version">v41-test-links</div>
 
 <script>
 const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
@@ -120,20 +106,42 @@ document.addEventListener("DOMContentLoaded", loadEvents);
 async function loadEvents() {
   try {
     const sheet = await fetchEventsFromGoogleSheet();
-    const events = normalizeSheetRows(sheet)
-      .filter(item => item.link && getFacebookEventId(item.link));
+    const all = normalizeSheetRows(sheet);
+    const linkedEvents = all.filter(item => item.link);
+    const facebookEvents = linkedEvents.filter(item => isFacebookUrl(item.link));
 
-    if (!events.length) {
-      statusBox.textContent = "Non trovo eventi con link Facebook nel foglio.";
+    if (!linkedEvents.length) {
+      statusBox.innerHTML = "Ho caricato il foglio, ma non trovo nessuna riga con LINK compilato.";
+      renderDebug(sheet, all);
       return;
     }
 
-    statusBox.textContent = `Trovati ${events.length} eventi con link Facebook. Ti mostro i primi 3.`;
-    renderEventTests(events.slice(0, 3));
+    const eventsToShow = facebookEvents.length ? facebookEvents : linkedEvents;
+
+    statusBox.innerHTML = `
+      Link trovati: <strong>${linkedEvents.length}</strong><br>
+      Link Facebook riconosciuti: <strong>${facebookEvents.length}</strong><br>
+      Mostro i primi <strong>${Math.min(eventsToShow.length, 3)}</strong>.
+    `;
+
+    renderEventTests(eventsToShow.slice(0, 3));
   } catch (error) {
     console.error(error);
     statusBox.textContent = "Errore caricamento Google Sheet. Controlla che il foglio sia pubblico in lettura.";
   }
+}
+
+function renderDebug(sheet, all) {
+  const debug = document.createElement("div");
+  debug.className = "event-card";
+  debug.innerHTML = `
+    <div class="event-title">Debug foglio</div>
+    <div class="event-meta">Headers letti:</div>
+    <code>${escapeHtml(JSON.stringify(sheet.headers))}</code>
+    <div class="event-meta">Prime righe interpretate:</div>
+    <code>${escapeHtml(JSON.stringify(all.slice(0, 3), null, 2))}</code>
+  `;
+  eventsBox.appendChild(debug);
 }
 
 function renderEventTests(events) {
@@ -146,16 +154,16 @@ function renderEventTests(events) {
 
     const title = document.createElement("div");
     title.className = "event-title";
-    title.textContent = `${index + 1}. ${item.evento}`;
+    title.textContent = `${index + 1}. ${item.evento || "Evento senza titolo"}`;
 
     const meta = document.createElement("div");
     meta.className = "event-meta";
-    meta.textContent = `${item.data} · ${item.ora} · ID ${id}`;
+    meta.innerHTML = `${escapeHtml(item.data || "-")} · ${escapeHtml(item.ora || "-")} · ${id ? "ID " + id : "<span class='warn'>ID numerico non trovato</span>"}`;
 
     const buttons = document.createElement("div");
     buttons.className = "buttons";
 
-    buildUrls(id, item.link).forEach(([label, url, primary]) => {
+    buildUrls(id, item.link).forEach(([label, url, primary, mode]) => {
       const wrapper = document.createElement("div");
       const button = document.createElement("button");
       const code = document.createElement("code");
@@ -166,7 +174,11 @@ function renderEventTests(events) {
       code.textContent = url;
 
       button.addEventListener("click", () => {
-        window.location.href = url;
+        if (mode === "blank") {
+          window.open(url, "_blank", "noopener,noreferrer");
+        } else {
+          window.location.href = url;
+        }
       });
 
       wrapper.appendChild(button);
@@ -182,30 +194,52 @@ function renderEventTests(events) {
 }
 
 function buildUrls(id, originalUrl) {
+  const urls = [
+    ["1 — Originale STESSA scheda", originalUrl, true, "same"],
+    ["2 — Originale NUOVA scheda/app", originalUrl, true, "blank"],
+    ["3 — Originale facewebmodal", `fb://facewebmodal/f?href=${encodeURIComponent(originalUrl)}`, true, "same"]
+  ];
+
+  if (!id) {
+    urls.push(["4 — Originale m.facebook trasformato", toMobileFacebook(originalUrl), false, "same"]);
+    return urls;
+  }
+
   const web = `https://www.facebook.com/events/${id}/`;
   const mobile = `https://m.facebook.com/events/${id}/`;
   const mbasic = `https://mbasic.facebook.com/events/${id}/`;
   const touch = `https://touch.facebook.com/events/${id}/`;
 
-  return [
-    ["1 — Link originale del foglio", originalUrl, true],
-    ["2 — Web canonico Facebook", web, true],
-    ["3 — Mobile Facebook m.", mobile, false],
-    ["4 — Touch Facebook", touch, false],
-    ["5 — Basic Facebook", mbasic, false],
-    ["6 — App fb://event/?id=", `fb://event/?id=${id}`, true],
-    ["7 — App fb://event/", `fb://event/${id}`, false],
-    ["8 — App facewebmodal web", `fb://facewebmodal/f?href=${encodeURIComponent(web)}`, false],
-    ["9 — App facewebmodal mobile", `fb://facewebmodal/f?href=${encodeURIComponent(mobile)}`, false],
-    ["10 — Android intent web", `intent://www.facebook.com/events/${id}/#Intent;scheme=https;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false],
-    ["11 — Android intent fb event", `intent://event/?id=${id}#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false]
-  ];
+  urls.push(
+    ["4 — Web canonico STESSA scheda", web, true, "same"],
+    ["5 — Web canonico NUOVA scheda/app", web, true, "blank"],
+    ["6 — Mobile Facebook m.", mobile, false, "same"],
+    ["7 — Touch Facebook", touch, false, "same"],
+    ["8 — Basic Facebook", mbasic, false, "same"],
+    ["9 — App fb://event/?id=", `fb://event/?id=${id}`, true, "same"],
+    ["10 — App fb://event/", `fb://event/${id}`, false, "same"],
+    ["11 — App facewebmodal web", `fb://facewebmodal/f?href=${encodeURIComponent(web)}`, false, "same"],
+    ["12 — App facewebmodal mobile", `fb://facewebmodal/f?href=${encodeURIComponent(mobile)}`, false, "same"],
+    ["13 — Android intent web", `intent://www.facebook.com/events/${id}/#Intent;scheme=https;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false, "same"],
+    ["14 — Android intent fb event", `intent://event/?id=${id}#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false, "same"]
+  );
+
+  return urls;
+}
+
+function toMobileFacebook(url) {
+  try {
+    const parsed = new URL(url);
+    parsed.hostname = "m.facebook.com";
+    return parsed.toString();
+  } catch {
+    return url;
+  }
 }
 
 function fetchEventsFromGoogleSheet() {
   return new Promise((resolve, reject) => {
     const callbackName = `sheetCallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
-
     const url = new URL(`https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq`);
     url.searchParams.set("gid", GOOGLE_SHEET_GID);
     url.searchParams.set("headers", "1");
@@ -260,29 +294,38 @@ function normalizeSheetRows(sheetData) {
   const headers = sheetData.headers;
   const rows = sheetData.rows;
 
-  const dataIndex = findFirstIndex(headers, ["data", "data_iso", "dataiso"]);
-  const oraIndex = headers.indexOf("ora");
-  const eventoIndex = headers.indexOf("evento");
-  const linkIndex = findFirstIndex(headers, ["link", "linkevento", "link_fb", "facebook", "evento_fb"]);
+  const dataIndex = findFirstIndex(headers, ["data", "dataiso", "data_iso"]);
+  const oraIndex = findFirstIndex(headers, ["ora", "orario"]);
+  const eventoIndex = findFirstIndex(headers, ["evento", "titolo", "nome"]);
+  let linkIndex = findFirstIndex(headers, ["link", "linkevento", "linkfb", "linkfacebook", "facebook", "eventofb", "url"]);
 
-  if (dataIndex === -1 || oraIndex === -1 || eventoIndex === -1 || linkIndex === -1) {
-    throw new Error("Colonne richieste: DATA, ORA, EVENTO, LINK");
+  // Fallback: se non trova header LINK, usa la quarta colonna.
+  if (linkIndex === -1 && headers.length >= 4) {
+    linkIndex = 3;
   }
 
-  return rows
-    .map(row => {
-      const rawDate = clean(row[dataIndex]);
-      const dateObject = parseSheetDate(rawDate);
+  return rows.map(row => {
+    const rawDate = dataIndex === -1 ? "" : clean(row[dataIndex]);
+    const dateObject = parseSheetDate(rawDate);
 
-      return {
-        data: dateObject ? formatDateIt(dateObject) : rawDate,
-        dateObject,
-        ora: clean(row[oraIndex]),
-        evento: clean(row[eventoIndex]),
-        link: normalizeUrl(row[linkIndex])
-      };
-    })
-    .filter(item => item.evento && item.link);
+    return {
+      data: dateObject ? formatDateIt(dateObject) : rawDate,
+      dateObject,
+      ora: oraIndex === -1 ? "" : clean(row[oraIndex]),
+      evento: eventoIndex === -1 ? "" : clean(row[eventoIndex]),
+      link: linkIndex === -1 ? "" : normalizeUrl(row[linkIndex])
+    };
+  });
+}
+
+function isFacebookUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    return host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
+  } catch {
+    return /^fb:\/\//i.test(String(url));
+  }
 }
 
 function getFacebookEventId(url) {
@@ -313,6 +356,14 @@ function getFacebookEventId(url) {
 function cellToString(cell) {
   if (!cell) return "";
 
+  // Se Google restituisce hyperlink nei metadati, prendiamo prima il link vero.
+  if (cell.p && cell.p.link) return String(cell.p.link);
+
+  if (cell.f && /href=/i.test(cell.f)) {
+    const href = String(cell.f).match(/href=["']([^"']+)["']/i);
+    if (href) return decodeHtml(href[1]);
+  }
+
   if (typeof cell.v === "string" && cell.v.startsWith("Date(")) {
     return cell.v;
   }
@@ -329,14 +380,10 @@ function parseSheetDate(value) {
   if (!text) return null;
 
   const googleDate = text.match(/^Date\((\d+),(\d+),(\d+)\)$/);
-  if (googleDate) {
-    return new Date(Number(googleDate[1]), Number(googleDate[2]), Number(googleDate[3]));
-  }
+  if (googleDate) return new Date(Number(googleDate[1]), Number(googleDate[2]), Number(googleDate[3]));
 
   const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (iso) {
-    return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
-  }
+  if (iso) return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
 
   const it = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
   if (it) {
@@ -379,6 +426,20 @@ function normalizeUrl(value) {
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+function decodeHtml(value) {
+  const txt = document.createElement("textarea");
+  txt.innerHTML = value;
+  return txt.value;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 </script>
 </body>

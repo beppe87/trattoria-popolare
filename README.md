@@ -245,3 +245,15 @@ Pagina test aggiornata:
 
 Ora carica direttamente gli eventi dal Google Sheet e genera i pulsanti già pronti per i primi eventi con link Facebook.
 Nessun copia/incolla da cellulare.
+
+
+## v41-test-links
+
+Pagina test aggiornata:
+
+```text
+/fb-test.html
+```
+
+Ora mostra anche link Facebook senza ID numerico e usa fallback sulla quarta colonna se non riconosce l'header LINK.
+Include anche pulsanti sul link originale in stessa scheda e nuova scheda/app.
