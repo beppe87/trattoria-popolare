@@ -178,11 +178,16 @@ function renderEvents(target, events, emptyMessage) {
 
     if (item.link) {
       row.href = item.link;
-      row.target = "_blank";
-      row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
-      row.addEventListener("click", openEventLink);
+
+      // Apertura nativa del browser:
+      // - desktop: nuova scheda
+      // - mobile: stessa scheda, più affidabile
+      if (!isMobileBrowser()) {
+        row.target = "_blank";
+        row.rel = "noopener noreferrer";
+      }
     }
 
     row.innerHTML = `
@@ -216,29 +221,6 @@ function renderPastEvents() {
 
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
-}
-
-function openEventLink(event) {
-  const url = event.currentTarget.href;
-  if (!url) return;
-
-  event.preventDefault();
-
-  // Mobile: più affidabile aprire nella stessa scheda.
-  // Desktop: nuova scheda.
-  if (isMobileBrowser()) {
-    window.location.assign(url);
-    return;
-  }
-
-  const opened = window.open(url, "_blank");
-
-  if (opened) {
-    opened.opener = null;
-    return;
-  }
-
-  window.location.assign(url);
 }
 
 function isMobileBrowser() {

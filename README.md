@@ -182,3 +182,11 @@ URL usato:
 ```text
 https://www.google.com/maps/search/?api=1&query=Trattoria%20Popolare%20Arci%20Traverso%20Via%20Antonio%20Pacinotti%204%2020155%20Milano
 ```
+
+
+## Fix link eventi mobile v27
+
+Rimosso il codice JavaScript che forzava l'apertura dei link evento.
+Ora i link usano il comportamento nativo del browser:
+- desktop: nuova scheda;
+- mobile: stessa scheda.
