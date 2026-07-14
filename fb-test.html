@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Test diretto link Facebook eventi</title>
+  <style>
+    :root {
+      --bg: #7f1715;
+      --fg: #fff7ef;
+      --line: rgba(255,247,239,.55);
+      --muted: rgba(255,247,239,.82);
+      --dark: rgba(0,0,0,.18);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 22px;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.35;
+    }
+    main { max-width: 820px; margin: 0 auto; }
+    h1 { margin: 0 0 10px; font-size: clamp(1.5rem, 6vw, 2.4rem); }
+    h2 { margin: 24px 0 8px; font-size: 1.15rem; }
+    p { color: var(--muted); }
+    .status,
+    .event-card {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(0,0,0,.12);
+    }
+    .event-title {
+      font-weight: 900;
+      font-size: 1.08rem;
+    }
+    .event-meta {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+    .buttons {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 14px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--dark);
+      color: var(--fg);
+      font: inherit;
+      font-weight: 850;
+      text-align: center;
+      cursor: pointer;
+    }
+    button.primary {
+      background: rgba(255,247,239,.16);
+      border-width: 2px;
+    }
+    code {
+      display: block;
+      margin-top: 6px;
+      padding: 9px;
+      background: rgba(0,0,0,.22);
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+      color: var(--fg);
+      font-size: 12px;
+    }
+    .small { font-size: .88rem; color: var(--muted); }
+    .version {
+      position: fixed;
+      right: 10px;
+      bottom: 8px;
+      z-index: 9999;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.45);
+      color: rgba(255, 247, 239, 0.88);
+      font-size: 11px;
+      line-height: 1;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Test diretto eventi Facebook</h1>
+  <p>
+    Carico automaticamente gli eventi dal Google Sheet. 
+    Non devi copiare nulla: prova i pulsanti del primo evento con link Facebook.
+  </p>
+
+  <div id="status" class="status">Caricamento eventi dal Google Sheet…</div>
+  <div id="events"></div>
+
+  <div class="status small">
+    Prova i pulsanti dall’alto. Quando uno apre davvero l’evento nell’app Facebook, segnati il nome del pulsante.
+  </div>
+</main>
+
+<div class="version">v40-test-direct</div>
+
+<script>
+const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
+const GOOGLE_SHEET_GID = "0";
+
+const statusBox = document.getElementById("status");
+const eventsBox = document.getElementById("events");
+
+document.addEventListener("DOMContentLoaded", loadEvents);
+
+async function loadEvents() {
+  try {
+    const sheet = await fetchEventsFromGoogleSheet();
+    const events = normalizeSheetRows(sheet)
+      .filter(item => item.link && getFacebookEventId(item.link));
+
+    if (!events.length) {
+      statusBox.textContent = "Non trovo eventi con link Facebook nel foglio.";
+      return;
+    }
+
+    statusBox.textContent = `Trovati ${events.length} eventi con link Facebook. Ti mostro i primi 3.`;
+    renderEventTests(events.slice(0, 3));
+  } catch (error) {
+    console.error(error);
+    statusBox.textContent = "Errore caricamento Google Sheet. Controlla che il foglio sia pubblico in lettura.";
+  }
+}
+
+function renderEventTests(events) {
+  eventsBox.innerHTML = "";
+
+  events.forEach((item, index) => {
+    const id = getFacebookEventId(item.link);
+    const card = document.createElement("section");
+    card.className = "event-card";
+
+    const title = document.createElement("div");
+    title.className = "event-title";
+    title.textContent = `${index + 1}. ${item.evento}`;
+
+    const meta = document.createElement("div");
+    meta.className = "event-meta";
+    meta.textContent = `${item.data} · ${item.ora} · ID ${id}`;
+
+    const buttons = document.createElement("div");
+    buttons.className = "buttons";
+
+    buildUrls(id, item.link).forEach(([label, url, primary]) => {
+      const wrapper = document.createElement("div");
+      const button = document.createElement("button");
+      const code = document.createElement("code");
+
+      button.type = "button";
+      button.textContent = label;
+      if (primary) button.className = "primary";
+      code.textContent = url;
+
+      button.addEventListener("click", () => {
+        window.location.href = url;
+      });
+
+      wrapper.appendChild(button);
+      wrapper.appendChild(code);
+      buttons.appendChild(wrapper);
+    });
+
+    card.appendChild(title);
+    card.appendChild(meta);
+    card.appendChild(buttons);
+    eventsBox.appendChild(card);
+  });
+}
+
+function buildUrls(id, originalUrl) {
+  const web = `https://www.facebook.com/events/${id}/`;
+  const mobile = `https://m.facebook.com/events/${id}/`;
+  const mbasic = `https://mbasic.facebook.com/events/${id}/`;
+  const touch = `https://touch.facebook.com/events/${id}/`;
+
+  return [
+    ["1 — Link originale del foglio", originalUrl, true],
+    ["2 — Web canonico Facebook", web, true],
+    ["3 — Mobile Facebook m.", mobile, false],
+    ["4 — Touch Facebook", touch, false],
+    ["5 — Basic Facebook", mbasic, false],
+    ["6 — App fb://event/?id=", `fb://event/?id=${id}`, true],
+    ["7 — App fb://event/", `fb://event/${id}`, false],
+    ["8 — App facewebmodal web", `fb://facewebmodal/f?href=${encodeURIComponent(web)}`, false],
+    ["9 — App facewebmodal mobile", `fb://facewebmodal/f?href=${encodeURIComponent(mobile)}`, false],
+    ["10 — Android intent web", `intent://www.facebook.com/events/${id}/#Intent;scheme=https;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false],
+    ["11 — Android intent fb event", `intent://event/?id=${id}#Intent;scheme=fb;package=com.facebook.katana;S.browser_fallback_url=${encodeURIComponent(web)};end`, false]
+  ];
+}
+
+function fetchEventsFromGoogleSheet() {
+  return new Promise((resolve, reject) => {
+    const callbackName = `sheetCallback_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+
+    const url = new URL(`https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq`);
+    url.searchParams.set("gid", GOOGLE_SHEET_GID);
+    url.searchParams.set("headers", "1");
+    url.searchParams.set("tqx", `responseHandler:${callbackName}`);
+    url.searchParams.set("_", Date.now());
+
+    const script = document.createElement("script");
+    script.src = url.toString();
+    script.async = true;
+
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error("Timeout caricamento Google Sheet"));
+    }, 10000);
+
+    window[callbackName] = response => {
+      cleanup();
+
+      if (!response || response.status === "error") {
+        reject(new Error(response?.errors?.[0]?.detailed_message || "Errore Google Sheet"));
+        return;
+      }
+
+      resolve(readGoogleTable(response.table));
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Google Sheet non raggiungibile"));
+    };
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+    }
+
+    document.body.appendChild(script);
+  });
+}
+
+function readGoogleTable(table) {
+  if (!table || !table.cols || !table.rows) return { headers: [], rows: [] };
+
+  const headers = table.cols.map(col => normalizeHeader(col.label || col.id || ""));
+  const rows = table.rows.map(row => (row.c || []).map(cell => cellToString(cell)));
+
+  return { headers, rows };
+}
+
+function normalizeSheetRows(sheetData) {
+  const headers = sheetData.headers;
+  const rows = sheetData.rows;
+
+  const dataIndex = findFirstIndex(headers, ["data", "data_iso", "dataiso"]);
+  const oraIndex = headers.indexOf("ora");
+  const eventoIndex = headers.indexOf("evento");
+  const linkIndex = findFirstIndex(headers, ["link", "linkevento", "link_fb", "facebook", "evento_fb"]);
+
+  if (dataIndex === -1 || oraIndex === -1 || eventoIndex === -1 || linkIndex === -1) {
+    throw new Error("Colonne richieste: DATA, ORA, EVENTO, LINK");
+  }
+
+  return rows
+    .map(row => {
+      const rawDate = clean(row[dataIndex]);
+      const dateObject = parseSheetDate(rawDate);
+
+      return {
+        data: dateObject ? formatDateIt(dateObject) : rawDate,
+        dateObject,
+        ora: clean(row[oraIndex]),
+        evento: clean(row[eventoIndex]),
+        link: normalizeUrl(row[linkIndex])
+      };
+    })
+    .filter(item => item.evento && item.link);
+}
+
+function getFacebookEventId(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
+
+    if (!isFacebook) return "";
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
+
+    if (eventIndex !== -1) {
+      const afterEvents = parts.slice(eventIndex + 1);
+      const numeric = afterEvents.find(part => /^\d{6,}$/.test(part));
+      if (numeric) return numeric;
+    }
+
+    const fallback = url.match(/\d{6,}/);
+    return fallback ? fallback[0] : "";
+  } catch {
+    const fallback = String(url).match(/\d{6,}/);
+    return fallback ? fallback[0] : "";
+  }
+}
+
+function cellToString(cell) {
+  if (!cell) return "";
+
+  if (typeof cell.v === "string" && cell.v.startsWith("Date(")) {
+    return cell.v;
+  }
+
+  if (cell.v !== null && cell.v !== undefined) {
+    return String(cell.v);
+  }
+
+  return cell.f || "";
+}
+
+function parseSheetDate(value) {
+  const text = clean(value);
+  if (!text) return null;
+
+  const googleDate = text.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+  if (googleDate) {
+    return new Date(Number(googleDate[1]), Number(googleDate[2]), Number(googleDate[3]));
+  }
+
+  const iso = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (iso) {
+    return new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+  }
+
+  const it = text.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+  if (it) {
+    const year = Number(it[3].length === 2 ? `20${it[3]}` : it[3]);
+    return new Date(year, Number(it[2]) - 1, Number(it[1]));
+  }
+
+  return null;
+}
+
+function formatDateIt(date) {
+  return date.toLocaleDateString("it-IT", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short"
+  }).replace(".", "").toUpperCase();
+}
+
+function normalizeHeader(value) {
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function findFirstIndex(headers, names) {
+  return names.map(name => headers.indexOf(name)).find(index => index !== -1) ?? -1;
+}
+
+function normalizeUrl(value) {
+  const url = clean(value);
+  if (!url) return "";
+
+  if (/^https?:\/\//i.test(url)) return url;
+  if (/^fb:\/\//i.test(url)) return url;
+  if (/^intent:\/\//i.test(url)) return url;
+  return "";
+}
+
+function clean(value) {
+  return String(value ?? "").trim();
+}
+</script>
+</body>
+</html>

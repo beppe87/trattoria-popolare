@@ -220,13 +220,28 @@ Link eventi:
 - Obiettivo: evitare home app Facebook, schermata nera e doppie aperture.
 
 
-## v38-first-no-fallback
+## v39-prod-web+test
 
-Versione con badge visibile in basso a destra: `v38-first-no-fallback`.
+Versione con sito stabile `v37-prod-web` + pagina diagnostica:
 
-Link eventi:
-- Replica il primo comportamento che apriva l'app Facebook:
-  `window.open(url, "_blank", "noopener,noreferrer")`.
-- Rimuove completamente il fallback `window.location.href = url`.
-- Quindi su desktop non può più aprire anche la pagina corrente.
-- Usa il link originale del Google Sheet, senza riscritture.
+```text
+/fb-test.html
+```
+
+Uso:
+1. carica tutto il pacchetto;
+2. apri `/fb-test.html?id=ID_EVENTO` dal cellulare;
+3. prova i bottoni;
+4. se un bottone apre davvero l'evento nell'app Facebook, usaremo quello nel sito.
+
+
+## v40-test-direct
+
+Pagina test aggiornata:
+
+```text
+/fb-test.html
+```
+
+Ora carica direttamente gli eventi dal Google Sheet e genera i pulsanti già pronti per i primi eventi con link Facebook.
+Nessun copia/incolla da cellulare.

@@ -222,12 +222,58 @@ function openEventLink(event) {
   const url = event.currentTarget.href;
   if (!url) return;
 
-  event.preventDefault();
+  // Desktop: nuova scheda nativa.
+  if (!isMobileBrowser()) {
+    return;
+  }
 
-  // v38: replica il comportamento che apriva l'app Facebook.
-  // Differenza rispetto alla prima versione: nessun fallback su window.location,
-  // quindi su desktop non può più aprire anche la pagina corrente.
-  window.open(url, "_blank", "noopener,noreferrer");
+  // Mobile PROD-SAFE:
+  // niente app Facebook, niente fb://, niente intent://.
+  // Apre l'evento web canonico nella stessa scheda, evitando home/black screen dell'app.
+  const eventId = getFacebookEventId(url);
+
+  if (eventId) {
+    event.preventDefault();
+    window.location.href = `https://www.facebook.com/events/${eventId}/`;
+    return;
+  }
+
+  event.preventDefault();
+  window.location.href = url;
+}
+
+function getFacebookEventId(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
+
+    if (!isFacebook) return "";
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
+
+    if (eventIndex === -1) return "";
+
+    const afterEvents = parts.slice(eventIndex + 1);
+
+    // Supporta:
+    // /events/123456789/
+    // /events/s/nome-evento/123456789/
+    // /events/nome-evento/123456789/
+    const numericPart = afterEvents.find(part => /^\d{6,}$/.test(part));
+
+    return numericPart || "";
+  } catch {
+    return "";
+  }
+}
+
+function isMobileBrowser() {
+  return navigator.maxTouchPoints > 0
+    || window.matchMedia("(hover: none) and (pointer: coarse)").matches
+    || window.innerWidth <= 760
+    || /Android|iPhone|iPad|iPod|Mobile|Mobi/i.test(navigator.userAgent);
 }
 
 function getTodayDateOnly() {
@@ -297,7 +343,6 @@ function normalizeUrl(value) {
   if (/^https?:\/\//i.test(url)) return url;
   return "";
 }
-
 
 
 
