@@ -199,3 +199,28 @@ Comportamento link eventi:
 - Desktop: apre in nuova scheda, senza cambiare la pagina corrente.
 - Mobile + link Facebook: prova ad aprire l'app Facebook con deep link.
 - Se l'app non parte, dopo circa 1 secondo apre il link web nella stessa scheda.
+
+
+## Link eventi Facebook v31
+
+Versione stabile:
+- niente `fb://`;
+- niente redirect JavaScript;
+- niente apertura forzata dell'app;
+- ogni link evento Facebook viene ripulito e trasformato in:
+  `https://www.facebook.com/events/ID/`;
+- il browser/telefono decide nativamente se aprire app Facebook o browser.
+
+È la soluzione più stabile per un sito statico.
+
+
+## Cache busting v31
+
+`index.html` carica:
+
+```text
+styles.css?v=31
+script.js?v=31
+```
+
+Così il telefono non usa vecchie versioni in cache.

@@ -6,6 +6,7 @@
   - DATA consigliata: YYYY-MM-DD, esempio 2026-06-24
   - Colonna opzionale: LINK
   - Se LINK è compilato, tutta la riga diventa cliccabile
+  - Link Facebook eventi: normalizzati in https://www.facebook.com/events/ID/
 */
 
 const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
@@ -182,7 +183,6 @@ function renderEvents(target, events, emptyMessage) {
       row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
-      row.addEventListener("click", openEventLink);
     }
 
     row.innerHTML = `
@@ -216,72 +216,6 @@ function renderPastEvents() {
 
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
-}
-
-function openEventLink(event) {
-  const url = event.currentTarget.href;
-  if (!url) return;
-
-  event.preventDefault();
-
-  // Desktop: nuova scheda, senza fallback sulla scheda corrente.
-  if (!isMobileBrowser()) {
-    window.open(url, "_blank", "noopener,noreferrer");
-    return;
-  }
-
-  // Mobile Facebook: prova ad aprire direttamente l'app Facebook.
-  const facebookAppUrl = getFacebookAppUrl(url);
-
-  if (facebookAppUrl) {
-    let appOpened = false;
-
-    const markAppOpened = () => {
-      appOpened = true;
-    };
-
-    document.addEventListener("visibilitychange", markAppOpened, { once: true });
-    window.addEventListener("pagehide", markAppOpened, { once: true });
-
-    window.location.href = facebookAppUrl;
-
-    // Se l'app non parte, resta sul sito e dopo poco apre il link web.
-    window.setTimeout(() => {
-      document.removeEventListener("visibilitychange", markAppOpened);
-      window.removeEventListener("pagehide", markAppOpened);
-
-      if (!appOpened && document.visibilityState === "visible") {
-        window.location.href = url;
-      }
-    }, 1200);
-
-    return;
-  }
-
-  // Mobile non Facebook: apertura normale nella stessa scheda.
-  window.location.href = url;
-}
-
-function getFacebookAppUrl(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
-
-    if (!host.endsWith("facebook.com") && host !== "fb.me") {
-      return "";
-    }
-
-    // Apre il link dentro l'app Facebook usando l'URL originale dell'evento.
-    return `fb://facewebmodal/f?href=${encodeURIComponent(url)}`;
-  } catch {
-    return "";
-  }
-}
-
-function isMobileBrowser() {
-  return window.matchMedia("(hover: none) and (pointer: coarse)").matches
-    || window.innerWidth <= 760
-    || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
 function getTodayDateOnly() {
@@ -348,11 +282,33 @@ function normalizeUrl(value) {
   const url = clean(value);
   if (!url) return "";
 
-  if (/^https?:\/\//i.test(url)) return url;
-  if (/^(www\.|facebook\.com|fb\.me)/i.test(url)) return `https://${url}`;
+  if (!/^https?:\/\//i.test(url)) return "";
 
-  return "";
+  return normalizeFacebookEventUrl(url);
 }
+
+function normalizeFacebookEventUrl(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
+
+    if (!isFacebook) return url;
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
+
+    if (eventIndex === -1 || !parts[eventIndex + 1]) return url;
+
+    const eventId = parts[eventIndex + 1].replace(/[^0-9]/g, "");
+    if (!eventId) return url;
+
+    return `https://www.facebook.com/events/${eventId}/`;
+  } catch {
+    return url;
+  }
+}
+
 
 function clean(value) {
   return String(value ?? "").trim();
