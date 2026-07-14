@@ -224,3 +224,18 @@ script.js?v=31
 ```
 
 Così il telefono non usa vecchie versioni in cache.
+
+
+## Link eventi Facebook app v32
+
+Questa versione prova il deep link più diretto possibile per l'app Facebook:
+
+```text
+fb://event/ID_EVENTO
+```
+
+Comportamento:
+- Desktop: link normale in nuova scheda.
+- Mobile + evento Facebook: prova apertura evento in app Facebook.
+- Se l'app non parte, fallback al link web canonico dopo circa 1,6 secondi.
+- Cache busting aggiornato a `script.js?v=32`.
