@@ -182,6 +182,7 @@ function renderEvents(target, events, emptyMessage) {
       row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
+      row.addEventListener("click", openEventLink);
     }
 
     row.innerHTML = `
@@ -215,6 +216,81 @@ function renderPastEvents() {
 
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
+}
+
+function openEventLink(event) {
+  const url = event.currentTarget.href;
+  if (!url) return;
+
+  // Desktop: comportamento nativo già corretto, nuova scheda.
+  if (!isMobileBrowser()) {
+    return;
+  }
+
+  const eventId = getFacebookEventId(url);
+
+  // Mobile non Facebook o link Facebook senza ID: stessa scheda, niente doppie aperture.
+  if (!eventId) {
+    event.preventDefault();
+    window.location.href = url;
+    return;
+  }
+
+  event.preventDefault();
+
+  const canonicalUrl = `https://www.facebook.com/events/${eventId}/`;
+
+  // Android Chrome/Edge: Intent ufficiale del browser verso app Facebook.
+  // Se l'app non gestisce l'evento, il browser usa il fallback web.
+  if (isAndroid()) {
+    window.location.href = buildAndroidFacebookIntent(canonicalUrl);
+    return;
+  }
+
+  // iPhone/iPad: usare il link https normale è più stabile dei vecchi fb://.
+  // iOS decide se aprire app Facebook o browser tramite Universal Link.
+  window.location.href = canonicalUrl;
+}
+
+function getFacebookEventId(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
+
+    if (!isFacebook) return "";
+
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
+
+    if (eventIndex === -1) return "";
+
+    // Supporta sia /events/123 sia /events/s/nome-evento/123
+    const afterEvents = parts.slice(eventIndex + 1);
+    const numericPart = afterEvents.find(part => /^\d{6,}$/.test(part));
+
+    return numericPart || "";
+  } catch {
+    return "";
+  }
+}
+
+function buildAndroidFacebookIntent(webUrl) {
+  const withoutProtocol = webUrl.replace(/^https?:\/\//i, "");
+  const fallback = encodeURIComponent(webUrl);
+
+  return `intent://${withoutProtocol}#Intent;scheme=https;package=com.facebook.katana;S.browser_fallback_url=${fallback};end`;
+}
+
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent);
+}
+
+function isMobileBrowser() {
+  return navigator.maxTouchPoints > 0
+    || window.matchMedia("(hover: none) and (pointer: coarse)").matches
+    || window.innerWidth <= 760
+    || /Android|iPhone|iPad|iPod|Mobile|Mobi/i.test(navigator.userAgent);
 }
 
 function getTodayDateOnly() {
@@ -284,6 +360,7 @@ function normalizeUrl(value) {
   if (/^https?:\/\//i.test(url)) return url;
   return "";
 }
+
 
 
 function clean(value) {

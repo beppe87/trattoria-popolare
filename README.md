@@ -196,3 +196,14 @@ Questa versione torna alla cosa più vicina al primo comportamento che funzionav
 Risultato atteso:
 - Desktop: nuova scheda, senza cambiare la pagina corrente.
 - Mobile: il telefono/browser decide nativamente se aprire app Facebook o browser.
+
+
+## v35-fb-intent
+
+Versione con badge visibile in basso a destra: `v35-fb-intent`.
+
+Link eventi:
+- Desktop: link nativo in nuova scheda.
+- Android: usa Android Intent verso app Facebook con fallback web.
+- iOS: usa link HTTPS canonico evento, lasciando a iOS la gestione Universal Link.
+- Link originale del Google Sheet conservato come base.

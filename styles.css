@@ -495,3 +495,19 @@ body {
 .load-more-button[hidden] {
   display: none;
 }
+
+
+.site-version {
+  position: fixed;
+  right: 10px;
+  bottom: 8px;
+  z-index: 9999;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 247, 239, 0.88);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
