@@ -190,3 +190,15 @@ Rimosso il codice JavaScript che forzava l'apertura dei link evento.
 Ora i link usano il comportamento nativo del browser:
 - desktop: nuova scheda;
 - mobile: stessa scheda.
+
+
+## Fix link eventi Facebook mobile v28
+
+Su mobile, i link evento Facebook vengono convertiti automaticamente in:
+
+```text
+https://m.facebook.com/events/ID_EVENTO/
+```
+
+Questo evita che alcuni browser/app aprano solo la home di Facebook invece dell'evento.
+Desktop resta invariato: nuova scheda con il link originale.
