@@ -13,12 +13,23 @@ const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
 const GOOGLE_SHEET_GID = "0";
 
 const MAX_UPCOMING_EVENTS = 8;
-const MAX_PAST_EVENTS = 12;
+const PAST_EVENTS_STEP = 10;
 
 const upcomingList = document.getElementById("upcoming-events-list");
 const pastList = document.getElementById("past-events-list");
+const loadMorePastButton = document.getElementById("load-more-past");
+
+let pastEventsCache = [];
+let visiblePastEvents = PAST_EVENTS_STEP;
 
 document.addEventListener("DOMContentLoaded", loadEvents);
+
+if (loadMorePastButton) {
+  loadMorePastButton.addEventListener("click", () => {
+    visiblePastEvents += PAST_EVENTS_STEP;
+    renderPastEvents();
+  });
+}
 
 async function loadEvents() {
   try {
@@ -31,13 +42,14 @@ async function loadEvents() {
       .sort((a, b) => a.dateObject - b.dateObject || a.ora.localeCompare(b.ora))
       .slice(0, MAX_UPCOMING_EVENTS);
 
-    const past = events
+    pastEventsCache = events
       .filter(item => item.dateObject < today)
-      .sort((a, b) => b.dateObject - a.dateObject || b.ora.localeCompare(a.ora))
-      .slice(0, MAX_PAST_EVENTS);
+      .sort((a, b) => b.dateObject - a.dateObject || b.ora.localeCompare(a.ora));
+
+    visiblePastEvents = PAST_EVENTS_STEP;
 
     renderEvents(upcomingList, upcoming, "Nessun evento in programma.");
-    renderEvents(pastList, past, "Nessun evento passato da mostrare.");
+    renderPastEvents();
   } catch (error) {
     console.error(error);
     renderError(
@@ -45,7 +57,8 @@ async function loadEvents() {
       "Non riesco a caricare gli eventi.",
       "Controlla che il Google Sheet sia pubblico in lettura e abbia le colonne DATA, ORA, EVENTO."
     );
-    renderEvents(pastList, [], "Nessun evento passato da mostrare.");
+    pastEventsCache = [];
+    renderPastEvents();
   }
 }
 
@@ -186,6 +199,24 @@ function renderEvents(target, events, emptyMessage) {
 
   target.appendChild(fragment);
 }
+
+function renderPastEvents() {
+  const visibleEvents = pastEventsCache.slice(0, visiblePastEvents);
+
+  renderEvents(pastList, visibleEvents, "Nessun evento passato da mostrare.");
+
+  if (!loadMorePastButton) return;
+
+  const remaining = pastEventsCache.length - visiblePastEvents;
+
+  if (remaining > 0) {
+    loadMorePastButton.hidden = false;
+    loadMorePastButton.textContent = `Mostra altri eventi (${Math.min(PAST_EVENTS_STEP, remaining)})`;
+  } else {
+    loadMorePastButton.hidden = true;
+  }
+}
+
 
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;

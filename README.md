@@ -118,3 +118,16 @@ Nel Google Sheet la colonna `LINK` deve contenere il link completo in chiaro:
 ```text
 https://www.facebook.com/events/123456789
 ```
+
+
+## Eventi passati: Mostra altri
+
+La sezione `Eventi passati` mostra inizialmente 10 righe.
+Se ci sono altri eventi, compare il bottone:
+
+```text
+Mostra altri eventi
+```
+
+Ogni click aggiunge altre 10 righe.
+Il Google Sheet resta unico e non cambia nulla per chi compila.

@@ -468,3 +468,30 @@ body {
     padding-bottom: 26px;
   }
 }
+
+
+.load-more-button {
+  appearance: none;
+  margin-top: 18px;
+  padding: 11px 16px;
+  border: 1.4px solid var(--white);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--white);
+  font: inherit;
+  font-size: clamp(0.82rem, 1vw, 0.95rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.load-more-button:hover,
+.load-more-button:focus-visible {
+  background: rgba(255, 247, 239, 0.12);
+  outline: none;
+}
+
+.load-more-button[hidden] {
+  display: none;
+}
