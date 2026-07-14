@@ -184,58 +184,12 @@ https://www.google.com/maps/search/?api=1&query=Trattoria%20Popolare%20Arci%20Tr
 ```
 
 
-## Fix link eventi v29
+## Link eventi Facebook v33
 
-Questa versione riprende il comportamento che funzionava su mobile, ma corregge il problema desktop.
+Questa versione riprende esattamente il comportamento mobile della prima versione funzionante:
+- usa il link originale del Google Sheet;
+- usa `window.open(url, "_blank", "noopener,noreferrer")`;
+- usa il fallback sulla scheda corrente solo su dispositivi mobile/touch;
+- su desktop non fa fallback, così evita il doppio caricamento.
 
-Comportamento:
-- Desktop: apre solo nuova scheda, senza fallback sulla scheda corrente.
-- Mobile: prova nuova scheda/app Facebook; se bloccata, apre nella scheda corrente.
-
-
-## Fix link eventi Facebook app v30
-
-Comportamento link eventi:
-- Desktop: apre in nuova scheda, senza cambiare la pagina corrente.
-- Mobile + link Facebook: prova ad aprire l'app Facebook con deep link.
-- Se l'app non parte, dopo circa 1 secondo apre il link web nella stessa scheda.
-
-
-## Link eventi Facebook v31
-
-Versione stabile:
-- niente `fb://`;
-- niente redirect JavaScript;
-- niente apertura forzata dell'app;
-- ogni link evento Facebook viene ripulito e trasformato in:
-  `https://www.facebook.com/events/ID/`;
-- il browser/telefono decide nativamente se aprire app Facebook o browser.
-
-È la soluzione più stabile per un sito statico.
-
-
-## Cache busting v31
-
-`index.html` carica:
-
-```text
-styles.css?v=31
-script.js?v=31
-```
-
-Così il telefono non usa vecchie versioni in cache.
-
-
-## Link eventi Facebook app v32
-
-Questa versione prova il deep link più diretto possibile per l'app Facebook:
-
-```text
-fb://event/ID_EVENTO
-```
-
-Comportamento:
-- Desktop: link normale in nuova scheda.
-- Mobile + evento Facebook: prova apertura evento in app Facebook.
-- Se l'app non parte, fallback al link web canonico dopo circa 1,6 secondi.
-- Cache busting aggiornato a `script.js?v=32`.
+Cache busting aggiornato a `script.js?v=33`.

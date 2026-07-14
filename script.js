@@ -6,7 +6,6 @@
   - DATA consigliata: YYYY-MM-DD, esempio 2026-06-24
   - Colonna opzionale: LINK
   - Se LINK è compilato, tutta la riga diventa cliccabile
-  - Link Facebook eventi: normalizzati in https://www.facebook.com/events/ID/
 */
 
 const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
@@ -223,71 +222,25 @@ function openEventLink(event) {
   const url = event.currentTarget.href;
   if (!url) return;
 
-  // Desktop: comportamento perfetto già verificato, nuova scheda e basta.
-  if (!isMobileBrowser()) {
-    return;
-  }
-
-  const eventId = getFacebookEventId(url);
-
-  if (!eventId) {
-    return;
-  }
-
   event.preventDefault();
 
-  // Mobile Facebook: deep link diretto all'evento nell'app, non alla home.
-  // È il tentativo più preciso possibile da sito statico.
-  const appUrl = `fb://event/${eventId}`;
-  const webUrl = `https://www.facebook.com/events/${eventId}/`;
+  // Questa è la logica della prima versione che da mobile apriva correttamente l'app:
+  // link originale Facebook + window.open("_blank", "noopener,noreferrer").
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
 
-  let leftPage = false;
-
-  const markLeftPage = () => {
-    leftPage = true;
-  };
-
-  document.addEventListener("visibilitychange", markLeftPage, { once: true });
-  window.addEventListener("pagehide", markLeftPage, { once: true });
-  window.addEventListener("blur", markLeftPage, { once: true });
-
-  window.location.href = appUrl;
-
-  // Fallback: se l'app non si apre, dopo poco apre il link web canonico.
-  window.setTimeout(() => {
-    document.removeEventListener("visibilitychange", markLeftPage);
-    window.removeEventListener("pagehide", markLeftPage);
-    window.removeEventListener("blur", markLeftPage);
-
-    if (!leftPage && document.visibilityState === "visible") {
-      window.location.href = webUrl;
-    }
-  }, 1600);
-}
-
-function getFacebookEventId(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
-    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
-
-    if (!isFacebook) return "";
-
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
-
-    if (eventIndex === -1 || !parts[eventIndex + 1]) return "";
-
-    return parts[eventIndex + 1].replace(/[^0-9]/g, "");
-  } catch {
-    return "";
+  // Il doppio caricamento desktop nasceva da qui:
+  // alcuni browser desktop aprono la nuova tab ma fanno comunque tornare opened = null
+  // quando c'è "noopener". Quindi il fallback NON deve scattare su desktop.
+  if (!opened && shouldUseMobileFallback()) {
+    window.location.href = url;
   }
 }
 
-function isMobileBrowser() {
-  return window.matchMedia("(hover: none) and (pointer: coarse)").matches
+function shouldUseMobileFallback() {
+  return navigator.maxTouchPoints > 0
+    || window.matchMedia("(hover: none) and (pointer: coarse)").matches
     || window.innerWidth <= 760
-    || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    || /Android|iPhone|iPad|iPod|Mobile|Mobi/i.test(navigator.userAgent);
 }
 
 function getTodayDateOnly() {
@@ -354,33 +307,11 @@ function normalizeUrl(value) {
   const url = clean(value);
   if (!url) return "";
 
-  if (!/^https?:\/\//i.test(url)) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  if (/^(www\.|facebook\.com|fb\.me)/i.test(url)) return `https://${url}`;
 
-  return normalizeFacebookEventUrl(url);
+  return "";
 }
-
-function normalizeFacebookEventUrl(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
-    const isFacebook = host === "facebook.com" || host.endsWith(".facebook.com") || host === "fb.me";
-
-    if (!isFacebook) return url;
-
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
-
-    if (eventIndex === -1 || !parts[eventIndex + 1]) return url;
-
-    const eventId = parts[eventIndex + 1].replace(/[^0-9]/g, "");
-    if (!eventId) return url;
-
-    return `https://www.facebook.com/events/${eventId}/`;
-  } catch {
-    return url;
-  }
-}
-
 
 function clean(value) {
   return String(value ?? "").trim();
