@@ -218,3 +218,15 @@ Link eventi:
 - Mobile: apre il link web canonico dell'evento Facebook nella stessa scheda.
 - Niente `fb://`, niente `intent://`, niente forzatura app Facebook.
 - Obiettivo: evitare home app Facebook, schermata nera e doppie aperture.
+
+
+## v38-first-no-fallback
+
+Versione con badge visibile in basso a destra: `v38-first-no-fallback`.
+
+Link eventi:
+- Replica il primo comportamento che apriva l'app Facebook:
+  `window.open(url, "_blank", "noopener,noreferrer")`.
+- Rimuove completamente il fallback `window.location.href = url`.
+- Quindi su desktop non può più aprire anche la pagina corrente.
+- Usa il link originale del Google Sheet, senza riscritture.
