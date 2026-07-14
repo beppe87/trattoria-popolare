@@ -22,14 +22,13 @@ data/eventi.csv
 Colonne:
 
 ```text
-DATA,ORA,EVENTO,LINK,MOSTRA
+DATA,ORA,EVENTO,LINK
 ```
 
 - `DATA`: obbligatoria, formato `YYYY-MM-DD`, esempio `2026-06-24`.
 - `ORA`: obbligatoria, esempio `19:30`.
 - `EVENTO`: obbligatoria.
 - `LINK`: opzionale. Se compilato, tutta la riga diventa cliccabile.
-- `MOSTRA`: opzionale. Usa `si`; se scrivi `no`, la riga resta nel foglio ma non appare.
 
 Il sito divide automaticamente:
 
@@ -49,7 +48,7 @@ MER 24 GIU
 Quando userete Google Sheet, il foglio dovrà avere le stesse colonne:
 
 ```text
-DATA | ORA | EVENTO | LINK | MOSTRA
+DATA | ORA | EVENTO | LINK
 ```
 
 Poi nel file `script.js` basterà sostituire:
@@ -150,3 +149,15 @@ Corretto comportamento dei link evento:
 - desktop: apre solo nuova scheda;
 - mobile: nuova scheda se possibile;
 - fallback nella stessa scheda solo se la nuova scheda viene bloccata.
+
+
+## Colonne attive Google Sheet
+
+Da questa versione le colonne sono solo:
+
+```text
+DATA | ORA | EVENTO | LINK
+```
+
+Se una riga è presente e ha DATA/ORA/EVENTO compilati, viene mostrata.
+La colonna `LINK` è opzionale: se compilata, rende cliccabile la riga.

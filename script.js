@@ -4,9 +4,8 @@
   - Nessun backend, nessun GitHub da toccare per aggiornare gli eventi
   - Colonne richieste: DATA | ORA | EVENTO
   - DATA consigliata: YYYY-MM-DD, esempio 2026-06-24
-  - Colonne opzionali: LINK | MOSTRA
+  - Colonna opzionale: LINK
   - Se LINK è compilato, tutta la riga diventa cliccabile
-  - Se MOSTRA è no/false/0/n, la riga non viene mostrata
 */
 
 const GOOGLE_SHEET_ID = "1XH-7Ybu7jMdrivr-IArc9lSifkRflmAr8yBI0kwJs6I";
@@ -126,7 +125,6 @@ function normalizeSheetRows(sheetData) {
   const oraIndex = headers.indexOf("ora");
   const eventoIndex = headers.indexOf("evento");
   const linkIndex = findFirstIndex(headers, ["link", "linkevento", "link_fb", "facebook", "evento_fb"]);
-  const mostraIndex = findFirstIndex(headers, ["mostra", "visibile", "online"]);
 
   if (dataIndex === -1 || oraIndex === -1 || eventoIndex === -1) {
     throw new Error("Il Google Sheet deve avere le colonne DATA, ORA, EVENTO");
@@ -142,12 +140,10 @@ function normalizeSheetRows(sheetData) {
         dateObject,
         ora: clean(row[oraIndex]),
         evento: clean(row[eventoIndex]),
-        link: linkIndex === -1 ? "" : normalizeUrl(row[linkIndex]),
-        mostra: mostraIndex === -1 ? "si" : clean(row[mostraIndex]).toLowerCase()
+        link: linkIndex === -1 ? "" : normalizeUrl(row[linkIndex])
       };
     })
-    .filter(item => item.dateObject && item.ora && item.evento)
-    .filter(item => !["no", "false", "0", "n"].includes(item.mostra));
+    .filter(item => item.dateObject && item.ora && item.evento);
 }
 
 function cellToString(cell) {
