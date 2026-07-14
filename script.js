@@ -222,14 +222,13 @@ function openEventLink(event) {
   const url = event.currentTarget.href;
   if (!url) return;
 
-  // Desktop: comportamento nativo già corretto, nuova scheda.
+  // Desktop: comportamento nativo, nuova scheda.
   if (!isMobileBrowser()) {
     return;
   }
 
   const eventId = getFacebookEventId(url);
 
-  // Mobile non Facebook o link Facebook senza ID: stessa scheda, niente doppie aperture.
   if (!eventId) {
     event.preventDefault();
     window.location.href = url;
@@ -238,18 +237,34 @@ function openEventLink(event) {
 
   event.preventDefault();
 
-  const canonicalUrl = `https://www.facebook.com/events/${eventId}/`;
+  // Schema più corretto trovato per evento Facebook:
+  // NON fb://event/ID
+  // SÌ  fb://event/?id=ID
+  const appUrl = `fb://event/?id=${eventId}`;
+  const webUrl = `https://www.facebook.com/events/${eventId}/`;
 
-  // Android Chrome/Edge: Intent ufficiale del browser verso app Facebook.
-  // Se l'app non gestisce l'evento, il browser usa il fallback web.
-  if (isAndroid()) {
-    window.location.href = buildAndroidFacebookIntent(canonicalUrl);
-    return;
-  }
+  let leftPage = false;
 
-  // iPhone/iPad: usare il link https normale è più stabile dei vecchi fb://.
-  // iOS decide se aprire app Facebook o browser tramite Universal Link.
-  window.location.href = canonicalUrl;
+  const markLeftPage = () => {
+    leftPage = true;
+  };
+
+  document.addEventListener("visibilitychange", markLeftPage, { once: true });
+  window.addEventListener("pagehide", markLeftPage, { once: true });
+  window.addEventListener("blur", markLeftPage, { once: true });
+
+  window.location.href = appUrl;
+
+  // Se l'app non parte, fallback web pulito.
+  window.setTimeout(() => {
+    document.removeEventListener("visibilitychange", markLeftPage);
+    window.removeEventListener("pagehide", markLeftPage);
+    window.removeEventListener("blur", markLeftPage);
+
+    if (!leftPage && document.visibilityState === "visible") {
+      window.location.href = webUrl;
+    }
+  }, 1600);
 }
 
 function getFacebookEventId(url) {
@@ -265,25 +280,18 @@ function getFacebookEventId(url) {
 
     if (eventIndex === -1) return "";
 
-    // Supporta sia /events/123 sia /events/s/nome-evento/123
     const afterEvents = parts.slice(eventIndex + 1);
+
+    // Supporta:
+    // /events/123456789/
+    // /events/s/nome-evento/123456789/
+    // /events/nome-evento/123456789/
     const numericPart = afterEvents.find(part => /^\d{6,}$/.test(part));
 
     return numericPart || "";
   } catch {
     return "";
   }
-}
-
-function buildAndroidFacebookIntent(webUrl) {
-  const withoutProtocol = webUrl.replace(/^https?:\/\//i, "");
-  const fallback = encodeURIComponent(webUrl);
-
-  return `intent://${withoutProtocol}#Intent;scheme=https;package=com.facebook.katana;S.browser_fallback_url=${fallback};end`;
-}
-
-function isAndroid() {
-  return /Android/i.test(navigator.userAgent);
 }
 
 function isMobileBrowser() {

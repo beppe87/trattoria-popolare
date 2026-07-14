@@ -207,3 +207,14 @@ Link eventi:
 - Android: usa Android Intent verso app Facebook con fallback web.
 - iOS: usa link HTTPS canonico evento, lasciando a iOS la gestione Universal Link.
 - Link originale del Google Sheet conservato come base.
+
+
+## v36-fb-event-id
+
+Versione con badge visibile in basso a destra: `v36-fb-event-id`.
+
+Link eventi:
+- Desktop: link nativo in nuova scheda.
+- Mobile + Facebook: prova `fb://event/?id=ID_EVENTO`.
+- Se l'app non parte, fallback al link web `https://www.facebook.com/events/ID_EVENTO/`.
+- Cache busting aggiornato a `script.js?v=36`.
