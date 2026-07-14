@@ -177,16 +177,12 @@ function renderEvents(target, events, emptyMessage) {
     row.setAttribute("role", "row");
 
     if (item.link) {
-      row.href = getEventUrlForDevice(item.link);
+      row.href = item.link;
+      row.target = "_blank";
+      row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
-
-      // Desktop: nuova scheda.
-      // Mobile: stessa scheda, ma con URL Facebook mobile quando possibile.
-      if (!isMobileBrowser()) {
-        row.target = "_blank";
-        row.rel = "noopener noreferrer";
-      }
+      row.addEventListener("click", openEventLink);
     }
 
     row.innerHTML = `
@@ -222,33 +218,24 @@ function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
 }
 
-function getEventUrlForDevice(url) {
-  if (!isMobileBrowser()) return url;
+function openEventLink(event) {
+  const url = event.currentTarget.href;
+  if (!url) return;
 
-  const facebookEventUrl = getMobileFacebookEventUrl(url);
-  return facebookEventUrl || url;
-}
+  event.preventDefault();
 
-function getMobileFacebookEventUrl(url) {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+  // Desktop: apre solo nuova scheda, senza fallback sulla scheda corrente.
+  if (!isMobileBrowser()) {
+    window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
 
-    if (!host.endsWith("facebook.com") && host !== "fb.me") {
-      return "";
-    }
+  // Mobile: stesso comportamento della prima versione che funzionava.
+  // Prova nuova scheda/app; se viene bloccata, apre nella scheda corrente.
+  const opened = window.open(url, "_blank", "noopener,noreferrer");
 
-    const parts = parsed.pathname.split("/").filter(Boolean);
-    const eventIndex = parts.findIndex(part => part.toLowerCase() === "events");
-
-    if (eventIndex === -1 || !parts[eventIndex + 1]) {
-      return "";
-    }
-
-    const eventId = parts[eventIndex + 1];
-    return `https://m.facebook.com/events/${eventId}/`;
-  } catch {
-    return "";
+  if (!opened) {
+    window.location.href = url;
   }
 }
 

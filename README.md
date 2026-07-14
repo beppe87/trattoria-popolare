@@ -184,21 +184,10 @@ https://www.google.com/maps/search/?api=1&query=Trattoria%20Popolare%20Arci%20Tr
 ```
 
 
-## Fix link eventi mobile v27
+## Fix link eventi v29
 
-Rimosso il codice JavaScript che forzava l'apertura dei link evento.
-Ora i link usano il comportamento nativo del browser:
-- desktop: nuova scheda;
-- mobile: stessa scheda.
+Questa versione riprende il comportamento che funzionava su mobile, ma corregge il problema desktop.
 
-
-## Fix link eventi Facebook mobile v28
-
-Su mobile, i link evento Facebook vengono convertiti automaticamente in:
-
-```text
-https://m.facebook.com/events/ID_EVENTO/
-```
-
-Questo evita che alcuni browser/app aprano solo la home di Facebook invece dell'evento.
-Desktop resta invariato: nuova scheda con il link originale.
+Comportamento:
+- Desktop: apre solo nuova scheda, senza fallback sulla scheda corrente.
+- Mobile: prova nuova scheda/app Facebook; se bloccata, apre nella scheda corrente.
