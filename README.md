@@ -131,3 +131,14 @@ Mostra altri eventi
 
 Ogni click aggiunge altre 10 righe.
 Il Google Sheet resta unico e non cambia nulla per chi compila.
+
+
+## Favicon
+
+La favicon della scheda browser è:
+
+```text
+assets/favicon.png
+```
+
+È ricavata dal simbolo del logo originale a colori, senza scritta, per essere più leggibile nella tab.
