@@ -182,7 +182,6 @@ function renderEvents(target, events, emptyMessage) {
       row.rel = "noopener noreferrer";
       row.setAttribute("aria-label", `${item.data} ${item.ora}: ${item.evento}`);
       row.title = "Apri evento";
-      row.addEventListener("click", openEventLink);
     }
 
     row.innerHTML = `
@@ -216,31 +215,6 @@ function renderPastEvents() {
 
 function renderError(target, message, detail) {
   target.innerHTML = `<div class="error-state">${escapeHtml(message)}<small>${escapeHtml(detail)}</small></div>`;
-}
-
-function openEventLink(event) {
-  const url = event.currentTarget.href;
-  if (!url) return;
-
-  event.preventDefault();
-
-  // Questa è la logica della prima versione che da mobile apriva correttamente l'app:
-  // link originale Facebook + window.open("_blank", "noopener,noreferrer").
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
-
-  // Il doppio caricamento desktop nasceva da qui:
-  // alcuni browser desktop aprono la nuova tab ma fanno comunque tornare opened = null
-  // quando c'è "noopener". Quindi il fallback NON deve scattare su desktop.
-  if (!opened && shouldUseMobileFallback()) {
-    window.location.href = url;
-  }
-}
-
-function shouldUseMobileFallback() {
-  return navigator.maxTouchPoints > 0
-    || window.matchMedia("(hover: none) and (pointer: coarse)").matches
-    || window.innerWidth <= 760
-    || /Android|iPhone|iPad|iPod|Mobile|Mobi/i.test(navigator.userAgent);
 }
 
 function getTodayDateOnly() {
@@ -308,10 +282,9 @@ function normalizeUrl(value) {
   if (!url) return "";
 
   if (/^https?:\/\//i.test(url)) return url;
-  if (/^(www\.|facebook\.com|fb\.me)/i.test(url)) return `https://${url}`;
-
   return "";
 }
+
 
 function clean(value) {
   return String(value ?? "").trim();

@@ -184,12 +184,15 @@ https://www.google.com/maps/search/?api=1&query=Trattoria%20Popolare%20Arci%20Tr
 ```
 
 
-## Link eventi Facebook v33
+## Link eventi v34
 
-Questa versione riprende esattamente il comportamento mobile della prima versione funzionante:
+Questa versione torna alla cosa più vicina al primo comportamento che funzionava:
 - usa il link originale del Google Sheet;
-- usa `window.open(url, "_blank", "noopener,noreferrer")`;
-- usa il fallback sulla scheda corrente solo su dispositivi mobile/touch;
-- su desktop non fa fallback, così evita il doppio caricamento.
+- non riscrive i link Facebook;
+- non usa `fb://`;
+- non usa JavaScript di redirect/fallback;
+- usa solo apertura nativa `_blank`.
 
-Cache busting aggiornato a `script.js?v=33`.
+Risultato atteso:
+- Desktop: nuova scheda, senza cambiare la pagina corrente.
+- Mobile: il telefono/browser decide nativamente se aprire app Facebook o browser.
