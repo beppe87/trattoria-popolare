@@ -222,49 +222,24 @@ function openEventLink(event) {
   const url = event.currentTarget.href;
   if (!url) return;
 
-  // Desktop: comportamento nativo, nuova scheda.
+  // Desktop: nuova scheda nativa.
   if (!isMobileBrowser()) {
     return;
   }
 
+  // Mobile PROD-SAFE:
+  // niente app Facebook, niente fb://, niente intent://.
+  // Apre l'evento web canonico nella stessa scheda, evitando home/black screen dell'app.
   const eventId = getFacebookEventId(url);
 
-  if (!eventId) {
+  if (eventId) {
     event.preventDefault();
-    window.location.href = url;
+    window.location.href = `https://www.facebook.com/events/${eventId}/`;
     return;
   }
 
   event.preventDefault();
-
-  // Schema più corretto trovato per evento Facebook:
-  // NON fb://event/ID
-  // SÌ  fb://event/?id=ID
-  const appUrl = `fb://event/?id=${eventId}`;
-  const webUrl = `https://www.facebook.com/events/${eventId}/`;
-
-  let leftPage = false;
-
-  const markLeftPage = () => {
-    leftPage = true;
-  };
-
-  document.addEventListener("visibilitychange", markLeftPage, { once: true });
-  window.addEventListener("pagehide", markLeftPage, { once: true });
-  window.addEventListener("blur", markLeftPage, { once: true });
-
-  window.location.href = appUrl;
-
-  // Se l'app non parte, fallback web pulito.
-  window.setTimeout(() => {
-    document.removeEventListener("visibilitychange", markLeftPage);
-    window.removeEventListener("pagehide", markLeftPage);
-    window.removeEventListener("blur", markLeftPage);
-
-    if (!leftPage && document.visibilityState === "visible") {
-      window.location.href = webUrl;
-    }
-  }, 1600);
+  window.location.href = url;
 }
 
 function getFacebookEventId(url) {
@@ -368,6 +343,7 @@ function normalizeUrl(value) {
   if (/^https?:\/\//i.test(url)) return url;
   return "";
 }
+
 
 
 

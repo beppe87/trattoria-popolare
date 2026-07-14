@@ -209,12 +209,12 @@ Link eventi:
 - Link originale del Google Sheet conservato come base.
 
 
-## v36-fb-event-id
+## v37-prod-web
 
-Versione con badge visibile in basso a destra: `v36-fb-event-id`.
+Versione produzione stabile con badge visibile in basso a destra: `v37-prod-web`.
 
 Link eventi:
-- Desktop: link nativo in nuova scheda.
-- Mobile + Facebook: prova `fb://event/?id=ID_EVENTO`.
-- Se l'app non parte, fallback al link web `https://www.facebook.com/events/ID_EVENTO/`.
-- Cache busting aggiornato a `script.js?v=36`.
+- Desktop: nuova scheda.
+- Mobile: apre il link web canonico dell'evento Facebook nella stessa scheda.
+- Niente `fb://`, niente `intent://`, niente forzatura app Facebook.
+- Obiettivo: evitare home app Facebook, schermata nera e doppie aperture.
